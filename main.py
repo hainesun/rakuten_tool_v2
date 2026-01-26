@@ -26,7 +26,6 @@ KEEP_DAYS = 60      # 過去何日分を残すか
 SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフルエンサー", "見て購入", "紹介"]
 
 async def run():
-    # 保存フォルダ作成
     if not os.path.exists(SAVE_DIR):
         os.makedirs(SAVE_DIR)
 
@@ -50,11 +49,10 @@ async def run():
                 continue
 
     async with async_playwright() as p:
-        # ★【重要】ステルス設定を追加！
-        # args=['--disable-blink-features=AutomationControlled'] でロボット判定を回避します
+        # 仮想モニター対応の設定
         browser = await p.chromium.launch(
-            headless=False, # まずは画面を出して確認！（動いたら True に戻してください）
-            slow_mo=500,    # 少しゆっくり動く（人間っぽく）
+            headless=False,  
+            slow_mo=500,    
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
@@ -65,23 +63,19 @@ async def run():
         )
         page = await context.new_page()
 
-        # ロボット検出回避のための追加設定
         await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
         for cat_name, cat_url in TARGET_CATEGORIES.items():
             print(f"\n🔍 【{cat_name}】 のランキングを取得中...")
             
             try:
-                # ページへ移動
                 await page.goto(cat_url, timeout=90000, wait_until="domcontentloaded")
                 
-                # 表示待ち（長めに待つ）
                 try:
-                    # 商品リンクが出るまで最大30秒待つ
                     await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
                     await page.wait_for_timeout(2000) 
                 except:
-                    print("   ⚠️ 商品リストが見つかりません（再読み込みを試します）")
+                    print("   ⚠️ 商品リストが見つかりません（リロード試行）")
                     await page.reload(wait_until="domcontentloaded")
                     await page.wait_for_timeout(5000)
                     try:
@@ -113,22 +107,30 @@ async def run():
                         print(f"   [{i+1}/{GET_LIMIT}] 分析中...")
                         await page.goto(url, timeout=90000, wait_until="domcontentloaded")
                         
-                        # スクロール
+                        # ▼▼▼【強化】画像読み込みのためのスクロール＆待機 ▼▼▼
                         await page.evaluate("window.scrollTo(0, 0)")
                         prev_height = -1
                         scroll_count = 0
-                        while scroll_count < 15: 
-                            await page.evaluate("window.scrollBy(0, 1000)")
-                            await page.wait_for_timeout(800) 
+                        
+                        # 少しゆっくりスクロールして画像を読み込ませる
+                        while scroll_count < 20: 
+                            await page.evaluate("window.scrollBy(0, 800)") # 刻みを細かく
+                            await page.wait_for_timeout(600) 
                             curr_height = await page.evaluate("document.body.scrollHeight")
                             if curr_height == prev_height: break
                             prev_height = curr_height
                             scroll_count += 1
                         
+                        # 上に戻る
                         await page.evaluate("window.scrollTo(0, 0)")
-                        await page.wait_for_timeout(2000)
                         
-                        # データ取得
+                        # ★ここが重要：通信が落ち着くまで最大5秒待つ（画像ロード待ち）
+                        try:
+                            await page.wait_for_load_state("networkidle", timeout=5000)
+                        except:
+                            await page.wait_for_timeout(2000) # タイムアウトしても最低2秒は待つ
+                        # ▲▲▲ 待機強化完了 ▲▲▲
+                        
                         title = await page.title()
                         content_text = await page.content()
                         page_height = await page.evaluate("document.body.scrollHeight")
@@ -174,10 +176,10 @@ async def run():
                             reason = f"短尺({page_height}px)"
                             tag_color = "#555"
 
-                        safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '_', '-'))[:15]
+                        # ▼▼▼【修正】ファイル名をシンプルにする（文字化け防止）▼▼▼
+                        # 日本語タイトルを使わず、カテゴリー名と順位だけの安全な名前にします
                         safe_cat_name = "".join(c for c in cat_name if c.isalnum())
-                        
-                        img_filename = f"{today_str}_{safe_cat_name}_{i+1}_{safe_title}.jpg"
+                        img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.jpg"
                         img_path = os.path.join(SAVE_DIR, img_filename)
                         
                         await page.screenshot(path=img_path, full_page=True, type="jpeg", quality=70)
@@ -204,7 +206,6 @@ async def run():
         
         await browser.close()
 
-    # --- HTML生成 ---
     if len(all_data_list) > 0:
         df = pd.DataFrame(all_data_list)
         csv_filename = f"rakuten_lp_list_{today_str}.csv"

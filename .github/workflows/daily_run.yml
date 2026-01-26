@@ -4,7 +4,7 @@ on:
   schedule:
     # 日本時間の朝5:00 (UTC 20:00) に実行
     - cron: '0 20 * * *'
-  workflow_dispatch: # 手動実行ボタンも有効
+  workflow_dispatch: # 手動実行ボタン
 
 permissions:
   contents: write
@@ -22,13 +22,17 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: 必要なライブラリのインストール
+      - name: 必要なライブラリと仮想モニターのインストール
         run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
           pip install -r requirements.txt
           playwright install chromium
+          playwright install-deps
 
-      - name: スクレイピング実行
-        run: python main.py
+      - name: スクレイピング実行 (仮想モニターで画面ありを偽装)
+        # ★ここが魔法のコマンドです！(xvfb-run)
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" python main.py
 
       - name: 結果を保存して更新
         run: |
