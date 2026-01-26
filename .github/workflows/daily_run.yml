@@ -4,7 +4,7 @@ on:
   schedule:
     # 日本時間の朝5:00 (UTC 20:00) に実行
     - cron: '0 20 * * *'
-  workflow_dispatch: # 手動ボタンでも実行できるようにする
+  workflow_dispatch: # 手動実行ボタンも有効
 
 permissions:
   contents: write
@@ -35,6 +35,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          # 変更がある時だけコミットする設定
           git commit -m "Auto update daily report" || exit 0
           git push

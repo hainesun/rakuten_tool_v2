@@ -4,230 +4,28 @@
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>楽天LP分析ギャラリー</title>
+            <title>楽天LP分析アーカイブ</title>
             <style>
-                body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 20px; display: none; color: #333; }
-                h1 { text-align: center; margin-bottom: 30px; }
-                h2.cat-title { 
-                    margin-top: 50px; margin-bottom: 20px; padding-left: 15px; 
-                    border-left: 5px solid #bf0000; font-size: 24px; background: #fff;
-                    padding: 10px 15px; border-radius: 0 5px 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                }
-                .gallery { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; }
-                
-                /* カードのデザイン */
-                .card { background: white; width: 300px; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.2s; position: relative; }
-                .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
-                
-                .tag { display: inline-block; padding: 4px 12px; border-radius: 20px; color: white; font-size: 11px; font-weight: bold; margin-bottom: 10px; }
-                
-                /* サムネイルクリック時のカーソルを変更 */
-                .thumb-wrapper { cursor: zoom-in; overflow: hidden; border-radius: 6px; border: 1px solid #eee; height: 350px; }
-                .thumb { width: 100%; height: 100%; object-fit: cover; object-position: top; transition: opacity 0.3s; }
-                .thumb:hover { opacity: 0.8; }
-
-                .title { font-size: 13px; margin: 10px 0; height: 38px; overflow: hidden; line-height: 1.4; }
-                .reason { font-size: 11px; color: #666; background: #f8f8f8; padding: 6px; border-radius: 4px; margin-bottom: 10px; }
-                a.link { display: block; text-align: center; background: #bf0000; color: white; text-decoration: none; font-size: 12px; padding: 8px; border-radius: 6px; font-weight: bold; }
-                
-                /* --- 拡大ビューアー（モーダル）のスタイル --- */
-                .modal {
-                    display: none; position: fixed; z-index: 999; left: 0; top: 0;
-                    width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.85);
-                    backdrop-filter: blur(5px);
-                }
-                .modal-content-wrapper {
-                    position: relative; margin: 20px auto; width: 95%; max-width: 600px;
-                    background: white; border-radius: 8px; overflow: hidden;
-                    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-                }
-                .modal-header {
-                    background: #fff; padding: 15px; border-bottom: 1px solid #eee;
-                    display: flex; justify-content: space-between; align-items: center;
-                    position: sticky; top: 0; z-index: 100;
-                }
-                .close-btn {
-                    color: #333; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1;
-                    background: #f0f0f0; width: 40px; height: 40px; border-radius: 50%;
-                    text-align: center; display: flex; align-items: center; justify-content: center;
-                }
-                .modal-img { width: 100%; display: block; }
+                body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f4f4f4; padding: 20px; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+                h1 { text-align: center; color: #bf0000; }
+                ul { list-style: none; padding: 0; }
+                li { margin-bottom: 15px; }
+                a.report-link { display: block; padding: 15px; background: #f8f9fa; border-left: 5px solid #bf0000; text-decoration: none; color: #333; font-weight: bold; transition: 0.2s; border-radius: 4px; }
+                a.report-link:hover { background: #bf0000; color: white; }
+                .date { font-size: 14px; color: #666; font-weight: normal; margin-left: 10px; }
             </style>
-            
-            <script>
-                // パスワード認証
-                window.onload = function() {
-                    var pass = prompt("閲覧パスワードを入力してください:");
-                    if (pass === "1234") {
-                        document.body.style.display = "block";
-                    } else {
-                        alert("パスワードが違います。");
-                        document.body.innerHTML = "<h1>⛔ Access Denied</h1>";
-                        document.body.style.display = "block";
-                    }
-                };
-
-                // ビューアーを開く関数
-                function openModal(imgSrc, title) {
-                    var modal = document.getElementById("imageModal");
-                    var modalImg = document.getElementById("modalImg");
-                    var modalTitle = document.getElementById("modalTitle");
-                    
-                    modal.style.display = "block";
-                    modalImg.src = imgSrc;
-                    modalTitle.innerText = title;
-                    document.body.style.overflow = "hidden"; // 背景スクロール固定
-                }
-
-                // ビューアーを閉じる関数
-                function closeModal() {
-                    var modal = document.getElementById("imageModal");
-                    modal.style.display = "none";
-                    document.body.style.overflow = "auto"; // スクロール解除
-                }
-
-                // 背景クリックでも閉じる
-                window.onclick = function(event) {
-                    var modal = document.getElementById("imageModal");
-                    if (event.target == modal) {
-                        closeModal();
-                    }
-                }
-            </script>
         </head>
         <body>
-            <h1>🏆 楽天LP分析ギャラリー (2026-01-26)</h1>
-
-            <div id="imageModal" class="modal">
-                <div class="modal-content-wrapper">
-                    <div class="modal-header">
-                        <div id="modalTitle" style="font-size:14px; font-weight:bold; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; width:85%;">タイトル</div>
-                        <span class="close-btn" onclick="closeModal()">&times;</span>
-                    </div>
-                    <img class="modal-img" id="modalImg">
-                </div>
-            </div>
-        <h2 class="cat-title">🏆 総合</h2><div class="gallery">
-                        <div class="card">
-                            <span class="tag" style="background: #e1306c">SNS/指名買い型</span>
-                            <div class="thumb-wrapper" onclick="openModal('総合_1_楽天市場2月9日以降発送現行価.jpg', '【楽天市場】2月9日以降発送【現行価格最後！1月31日11:59まで半額】※原料価格暴騰により段階値上げ予定※［無塩］訳あり骨取りさば（選べる1kg・2kg）｜骨なし 骨抜き 天然 ノルウェー産 イギリス産 鯖 お弁当 魚 冷凍 減塩 送料無料 食品 まとめ買い 離乳食 : 骨取り魚の飯田商店')">
-                                <img src="総合_1_楽天市場2月9日以降発送現行価.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>1位:</b> 【楽天市場】2月9日以降発送【現行価格最後！1月31日11:59まで半...</div>
-                            <div class="reason">💡 キーワード: 紹介</div>
-                            <a href="https://item.rakuten.co.jp/yamagoiida/10000077/?l2-id=Ranking_SP_daily-0-d_rnkRankingMain&s-id=Ranking_SP_daily-0-d_rnkRankingMain_1_image" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    
-                        <div class="card">
-                            <span class="tag" style="background: #e1306c">SNS/指名買い型</span>
-                            <div class="thumb-wrapper" onclick="openModal('総合_2_楽天市場2月9日以降発送現行価.jpg', '【楽天市場】2月9日以降発送【現行価格最後！1月31日11:59まで半額】※原料価格暴騰により段階値上げ予定※［無塩］訳あり骨取りさば（選べる1kg・2kg）｜骨なし 骨抜き 天然 ノルウェー産 イギリス産 鯖 お弁当 魚 冷凍 減塩 送料無料 食品 まとめ買い 離乳食 : 骨取り魚の飯田商店')">
-                                <img src="総合_2_楽天市場2月9日以降発送現行価.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>2位:</b> 【楽天市場】2月9日以降発送【現行価格最後！1月31日11:59まで半...</div>
-                            <div class="reason">💡 キーワード: 紹介</div>
-                            <a href="https://item.rakuten.co.jp/yamagoiida/10000077/?l2-id=Ranking_SP_daily-0-d_rnkRankingMain&s-id=Ranking_SP_daily-0-d_rnkRankingMain_1_name" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    
-                        <div class="card">
-                            <span class="tag" style="background: #555">シンプル/SNS型</span>
-                            <div class="thumb-wrapper" onclick="openModal('総合_3_楽天市場SALEプレーンレモン.jpg', '【楽天市場】【SALE★プレーン・レモン・シリカ100円OFF】炭酸水 500ml 48本 (24本×2ケース) 送料無料※一部地域除く 強炭酸 炭酸 無糖 OZA SODA プレーン レモン ピンクグレープフルーツ ライム 割り材 箱買い まとめ買い ライフドリンクカンパニー LIFEDRINK ZAO SODA : LIFEDRINKオンラインストア')">
-                                <img src="総合_3_楽天市場SALEプレーンレモン.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>3位:</b> 【楽天市場】【SALE★プレーン・レモン・シリカ100円OFF】炭酸水...</div>
-                            <div class="reason">💡 短尺(17286px)</div>
-                            <a href="https://item.rakuten.co.jp/lifedrinkcompany/zaosoda-500-48/?l2-id=Ranking_SP_daily-0-d_rnkRankingMain&s-id=Ranking_SP_daily-0-d_rnkRankingMain_2_image" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    </div><h2 class="cat-title">👗 レディースファッション</h2><div class="gallery">
-                        <div class="card">
-                            <span class="tag" style="background: #bf0000">従来型LP(説得型)</span>
-                            <div class="thumb-wrapper" onclick="openModal('レディースファッション_1_楽天市場60OFF期間限定15.jpg', '【楽天市場】60％OFF！【期間限定：1,580円〜1,980円！】【楽天一位】裏起毛 パンツ レディース 秋冬 ストレッチ ワイドパンツ あったか ズボン 美脚 ゆったり スウェット 通勤 部屋着 きれいめ 防寒 厚手 体型カバー 選べる丈 ダブルウエスト/裏起毛がページ内最安a_bag : Dark Angel （ダークエンジェル）')">
-                                <img src="レディースファッション_1_楽天市場60OFF期間限定15.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>1位:</b> 【楽天市場】60％OFF！【期間限定：1,580円〜1,980円！】【...</div>
-                            <div class="reason">💡 長尺(66578px)</div>
-                            <a href="https://item.rakuten.co.jp/darkangel/pa2010-2536/?l2-id=Ranking_SP_daily-100371-d_rnkRankingMain&s-id=Ranking_SP_daily-100371-d_rnkRankingMain_1_image" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    
-                        <div class="card">
-                            <span class="tag" style="background: #bf0000">従来型LP(説得型)</span>
-                            <div class="thumb-wrapper" onclick="openModal('レディースファッション_2_楽天市場60OFF期間限定15.jpg', '【楽天市場】60％OFF！【期間限定：1,580円〜1,980円！】【楽天一位】裏起毛 パンツ レディース 秋冬 ストレッチ ワイドパンツ あったか ズボン 美脚 ゆったり スウェット 通勤 部屋着 きれいめ 防寒 厚手 体型カバー 選べる丈 ダブルウエスト/裏起毛がページ内最安a_bag : Dark Angel （ダークエンジェル）')">
-                                <img src="レディースファッション_2_楽天市場60OFF期間限定15.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>2位:</b> 【楽天市場】60％OFF！【期間限定：1,580円〜1,980円！】【...</div>
-                            <div class="reason">💡 長尺(66578px)</div>
-                            <a href="https://item.rakuten.co.jp/darkangel/pa2010-2536/?l2-id=Ranking_SP_daily-100371-d_rnkRankingMain&s-id=Ranking_SP_daily-100371-d_rnkRankingMain_1_name" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    
-                        <div class="card">
-                            <span class="tag" style="background: #bf0000">従来型LP(説得型)</span>
-                            <div class="thumb-wrapper" onclick="openModal('レディースファッション_3_楽天市場67OFF期間限定39.jpg', '【楽天市場】67%OFF!【期間限定：3,980円→1,299円！】 【年間ランキング6位】 裏起毛 レギンス トレンカ 冷え取り 冷えとり あったか レディース 裏起毛 暖かい 10分丈 元祖裏起毛 防寒 裏ボア リブレギンス【 元祖裏起毛もっこもこレギンス】a_bag : Dark Angel （ダークエンジェル）')">
-                                <img src="レディースファッション_3_楽天市場67OFF期間限定39.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>3位:</b> 【楽天市場】67%OFF!【期間限定：3,980円→1,299円！】 ...</div>
-                            <div class="reason">💡 長尺(30129px)</div>
-                            <a href="https://item.rakuten.co.jp/darkangel/to2309-3814/?l2-id=Ranking_SP_daily-100371-d_rnkRankingMain&s-id=Ranking_SP_daily-100371-d_rnkRankingMain_2_image" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    </div><h2 class="cat-title">🍜 食品</h2><div class="gallery">
-                        <div class="card">
-                            <span class="tag" style="background: #e1306c">SNS/指名買い型</span>
-                            <div class="thumb-wrapper" onclick="openModal('食品_1_楽天市場2月9日以降発送現行価.jpg', '【楽天市場】2月9日以降発送【現行価格最後！1月31日11:59まで半額】※原料価格暴騰により段階値上げ予定※［無塩］訳あり骨取りさば（選べる1kg・2kg）｜骨なし 骨抜き 天然 ノルウェー産 イギリス産 鯖 お弁当 魚 冷凍 減塩 送料無料 食品 まとめ買い 離乳食 : 骨取り魚の飯田商店')">
-                                <img src="食品_1_楽天市場2月9日以降発送現行価.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>1位:</b> 【楽天市場】2月9日以降発送【現行価格最後！1月31日11:59まで半...</div>
-                            <div class="reason">💡 キーワード: 紹介</div>
-                            <a href="https://item.rakuten.co.jp/yamagoiida/10000077/?l2-id=Ranking_SP_daily-100227-d_rnkRankingMain&s-id=Ranking_SP_daily-100227-d_rnkRankingMain_1_image" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    
-                        <div class="card">
-                            <span class="tag" style="background: #e1306c">SNS/指名買い型</span>
-                            <div class="thumb-wrapper" onclick="openModal('食品_2_楽天市場2月9日以降発送現行価.jpg', '【楽天市場】2月9日以降発送【現行価格最後！1月31日11:59まで半額】※原料価格暴騰により段階値上げ予定※［無塩］訳あり骨取りさば（選べる1kg・2kg）｜骨なし 骨抜き 天然 ノルウェー産 イギリス産 鯖 お弁当 魚 冷凍 減塩 送料無料 食品 まとめ買い 離乳食 : 骨取り魚の飯田商店')">
-                                <img src="食品_2_楽天市場2月9日以降発送現行価.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>2位:</b> 【楽天市場】2月9日以降発送【現行価格最後！1月31日11:59まで半...</div>
-                            <div class="reason">💡 キーワード: 紹介</div>
-                            <a href="https://item.rakuten.co.jp/yamagoiida/10000077/?l2-id=Ranking_SP_daily-100227-d_rnkRankingMain&s-id=Ranking_SP_daily-100227-d_rnkRankingMain_1_name" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    
-                        <div class="card">
-                            <span class="tag" style="background: #e1306c">SNS/指名買い型</span>
-                            <div class="thumb-wrapper" onclick="openModal('食品_3_楽天市場値上げ前に店長大暴走で.jpg', '【楽天市場】値上げ前に★店長大暴走で最安値挑戦！骨取りサバ切身 1kg 送料無料2,490円～ 無塩or有塩が選べる♪骨とり 骨なし 鯖 さば 冷凍食品 : 越前かに職人甲羅組（DENSHOKU）')">
-                                <img src="食品_3_楽天市場値上げ前に店長大暴走で.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>3位:</b> 【楽天市場】値上げ前に★店長大暴走で最安値挑戦！骨取りサバ切身 1kg...</div>
-                            <div class="reason">💡 キーワード: 紹介</div>
-                            <a href="https://item.rakuten.co.jp/kouragumi/201175/?l2-id=Ranking_SP_daily-100227-d_rnkRankingMain&s-id=Ranking_SP_daily-100227-d_rnkRankingMain_2_image" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    </div><h2 class="cat-title">💄 美容・コスメ</h2><div class="gallery">
-                        <div class="card">
-                            <span class="tag" style="background: #555">シンプル/SNS型</span>
-                            <div class="thumb-wrapper" onclick="openModal('美容コスメ_1_楽天市場スキンクリア クレンズ.jpg', '【楽天市場】スキンクリア クレンズ オイル エコパック* (限定1種/通常4種) 【アテニア 公式】[ 大容量 クレンジング クレンジングオイル オイルクレンジング メイク落とし 詰め替え 化粧落とし ダブル洗顔不要 毛穴 毛穴ケア 角栓 ] : アテニア公式ショップ　楽天市場店')">
-                                <img src="美容コスメ_1_楽天市場スキンクリア クレンズ.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>1位:</b> 【楽天市場】スキンクリア クレンズ オイル エコパック* (限定1種/...</div>
-                            <div class="reason">💡 短尺(24595px)</div>
-                            <a href="https://item.rakuten.co.jp/attenir/166013/?l2-id=Ranking_SP_daily-100939-d_rnkRankingMain&s-id=Ranking_SP_daily-100939-d_rnkRankingMain_1_image" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    
-                        <div class="card">
-                            <span class="tag" style="background: #555">シンプル/SNS型</span>
-                            <div class="thumb-wrapper" onclick="openModal('美容コスメ_2_楽天市場スキンクリア クレンズ.jpg', '【楽天市場】スキンクリア クレンズ オイル エコパック* (限定1種/通常4種) 【アテニア 公式】[ 大容量 クレンジング クレンジングオイル オイルクレンジング メイク落とし 詰め替え 化粧落とし ダブル洗顔不要 毛穴 毛穴ケア 角栓 ] : アテニア公式ショップ　楽天市場店')">
-                                <img src="美容コスメ_2_楽天市場スキンクリア クレンズ.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>2位:</b> 【楽天市場】スキンクリア クレンズ オイル エコパック* (限定1種/...</div>
-                            <div class="reason">💡 短尺(24595px)</div>
-                            <a href="https://item.rakuten.co.jp/attenir/166013/?l2-id=Ranking_SP_daily-100939-d_rnkRankingMain&s-id=Ranking_SP_daily-100939-d_rnkRankingMain_1_name" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    
-                        <div class="card">
-                            <span class="tag" style="background: #555">シンプル/SNS型</span>
-                            <div class="thumb-wrapper" onclick="openModal('美容コスメ_3_楽天市場残り3日P25還元確定.jpg', '【楽天市場】＼残り3日!P25％還元確定+10%OFF／【資生堂認定ショップ】25.9.21new! エリクシール シュペリエル レチノパワー リンクルクリーム ba : コスメティック　やよい')">
-                                <img src="美容コスメ_3_楽天市場残り3日P25還元確定.jpg" class="thumb" loading="lazy" title="クリックで拡大">
-                            </div>
-                            <div class="title"><b>3位:</b> 【楽天市場】＼残り3日!P25％還元確定+10%OFF／【資生堂認定シ...</div>
-                            <div class="reason">💡 短尺(11373px)</div>
-                            <a href="https://item.rakuten.co.jp/yayoi-cosme/21468-m/?l2-id=Ranking_SP_daily-100939-d_rnkRankingMain&s-id=Ranking_SP_daily-100939-d_rnkRankingMain_2_image" target="_blank" class="link">楽天ページを見る</a>
-                        </div>
-                    </div>
-        </body>
-        </html>
+            <div class="container">
+                <h1>📚 LP分析レポート一覧</h1>
+                <p style="text-align:center; margin-bottom:30px;">過去60日分のデータを保存中</p>
+                <ul>
         
+                <li>
+                    <a href="report_2026-01-26.html" class="report-link">
+                        📂 2026-01-26 のレポート
+                        <span class="date">クリックして閲覧</span>
+                    </a>
+                </li>
+            </ul></div></body></html>

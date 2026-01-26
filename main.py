@@ -5,47 +5,90 @@ import os
 import datetime
 import glob
 import re
+import random
 
-# --- 設定エリア ---
+# --- 🛠 設定エリア 🛠 ---
 TARGET_CATEGORIES = {
     "🏆 総合": "https://ranking.rakuten.co.jp/daily/",
     "👗 レディースファッション": "https://ranking.rakuten.co.jp/daily/100371/",
     "👛 財布・ポーチ": "https://ranking.rakuten.co.jp/daily/216131/",
     "🛋 インテリア": "https://ranking.rakuten.co.jp/daily/100804/",
     "🍜 食品": "https://ranking.rakuten.co.jp/daily/100227/",
-    "💄 美容・コスメ": "https://ranking.rakuten.co.jp/daily/100939/"
+    "💄 美容・コスメ": "https://ranking.rakuten.co.jp/daily/100939/",
 }
 
-GET_LIMIT = 5   # 各カテゴリー5位まで
+GET_LIMIT = 5       # 各カテゴリー5位まで
 SAVE_DIR = "lp_stock"
 PAGE_PASSWORD = "1234" 
-# ------------------
+KEEP_DAYS = 60      # 過去何日分を残すか
+# -----------------------
 
 SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフルエンサー", "見て購入", "紹介"]
 
 async def run():
+    # 保存フォルダ作成
     if not os.path.exists(SAVE_DIR):
         os.makedirs(SAVE_DIR)
 
     all_data_list = []
-    today_str = str(datetime.date.today())
+    today = datetime.date.today()
+    today_str = str(today)
+
+    # ▼▼▼ 1. お掃除機能 ▼▼▼
+    print(f"\n🧹 データの整理を開始します（保存期限: {KEEP_DAYS}日）...")
+    limit_date = today - datetime.timedelta(days=KEEP_DAYS)
+    files = glob.glob(os.path.join(SAVE_DIR, "*"))
+    for f in files:
+        filename = os.path.basename(f)
+        match = re.search(r"(\d{4}-\d{2}-\d{2})", filename)
+        if match:
+            try:
+                file_date = datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date()
+                if file_date < limit_date:
+                    os.remove(f)
+            except:
+                continue
 
     async with async_playwright() as p:
-        # ★自動化用に画面を出さない設定 (headless=True) にしています
-        browser = await p.chromium.launch(headless=True)
+        # ★【重要】ステルス設定を追加！
+        # args=['--disable-blink-features=AutomationControlled'] でロボット判定を回避します
+        browser = await p.chromium.launch(
+            headless=False, # まずは画面を出して確認！（動いたら True に戻してください）
+            slow_mo=500,    # 少しゆっくり動く（人間っぽく）
+            args=['--disable-blink-features=AutomationControlled'] 
+        )
+        
         context = await browser.new_context(
             viewport={'width': 390, 'height': 844},
             device_scale_factor=2,
-            user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
+            user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         )
         page = await context.new_page()
+
+        # ロボット検出回避のための追加設定
+        await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
         for cat_name, cat_url in TARGET_CATEGORIES.items():
             print(f"\n🔍 【{cat_name}】 のランキングを取得中...")
             
             try:
-                await page.goto(cat_url, timeout=60000)
-                await page.wait_for_timeout(2000)
+                # ページへ移動
+                await page.goto(cat_url, timeout=90000, wait_until="domcontentloaded")
+                
+                # 表示待ち（長めに待つ）
+                try:
+                    # 商品リンクが出るまで最大30秒待つ
+                    await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
+                    await page.wait_for_timeout(2000) 
+                except:
+                    print("   ⚠️ 商品リストが見つかりません（再読み込みを試します）")
+                    await page.reload(wait_until="domcontentloaded")
+                    await page.wait_for_timeout(5000)
+                    try:
+                        await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
+                    except:
+                        print("   ❌ ダメでした。スキップします。")
+                        continue
 
                 all_links = await page.locator("a").all()
                 target_urls = []
@@ -67,55 +110,46 @@ async def run():
 
                 for i, url in enumerate(target_urls):
                     try:
-                        print(f"   [{i+1}/{GET_LIMIT}] 分析中: {url[:30]}...")
+                        print(f"   [{i+1}/{GET_LIMIT}] 分析中...")
                         await page.goto(url, timeout=90000, wait_until="domcontentloaded")
                         
-                        # --- スクショ撮影 ---
+                        # スクロール
                         await page.evaluate("window.scrollTo(0, 0)")
                         prev_height = -1
                         scroll_count = 0
-                        while scroll_count < 30:
-                            await page.evaluate("window.scrollBy(0, 1500)")
-                            await page.wait_for_timeout(300)
+                        while scroll_count < 15: 
+                            await page.evaluate("window.scrollBy(0, 1000)")
+                            await page.wait_for_timeout(800) 
                             curr_height = await page.evaluate("document.body.scrollHeight")
                             if curr_height == prev_height: break
                             prev_height = curr_height
                             scroll_count += 1
                         
-                        # --- データ取得 ---
+                        await page.evaluate("window.scrollTo(0, 0)")
+                        await page.wait_for_timeout(2000)
+                        
+                        # データ取得
                         title = await page.title()
                         content_text = await page.content()
                         page_height = await page.evaluate("document.body.scrollHeight")
 
-                        # ▼▼▼ 新機能：レビュー情報の取得 ▼▼▼
                         review_url = ""
-                        review_text = "レビュー情報なし"
-                        
                         try:
-                            # ページ内の「review.rakuten.co.jp」を含むリンクを探す
                             review_link_loc = page.locator("a[href*='review.rakuten.co.jp']").first
                             if await review_link_loc.count() > 0:
                                 review_url = await review_link_loc.get_attribute("href")
-                                review_text = "⭐️ レビューを見る"
-                            
-                            # レビュー点数や件数っぽいものを探す（簡易的な探索）
-                            # 楽天SPページは構造が複雑なため、review_urlがあれば十分役に立ちます
                         except:
                             pass
                         
-                        # ▼▼▼ 新機能：キャッチコピー（ベネフィット）の取得 ▼▼▼
                         catch_copy = ""
                         try:
-                            # 一般的なキャッチコピーのクラス名を探る
                             catch_loc = page.locator(".catch_copy, .item_catch_copy, [class*='catch']").first
                             if await catch_loc.count() > 0:
-                                catch_copy = await catch_loc.text_content()
-                                catch_copy = catch_copy.strip()[:60] + "..." # 長すぎるのでカット
+                                txt = await catch_loc.text_content()
+                                catch_copy = txt.strip()[:60] + "..."
                         except:
                             pass
-                        # ▲▲▲ 追加終わり ▲▲▲
 
-                        # 分析ロジック
                         sns_score = 0
                         found_keywords = []
                         for kw in SNS_KEYWORDS:
@@ -152,9 +186,8 @@ async def run():
                             "category": cat_name,
                             "rank": i+1,
                             "title": title,
-                            "catch_copy": catch_copy, # 追加
-                            "review_url": review_url, # 追加
-                            "review_text": review_text, # 追加
+                            "catch_copy": catch_copy,
+                            "review_url": review_url,
                             "type": prediction,
                             "reason": reason,
                             "url": url,
@@ -171,12 +204,12 @@ async def run():
         
         await browser.close()
 
+    # --- HTML生成 ---
     if len(all_data_list) > 0:
         df = pd.DataFrame(all_data_list)
         csv_filename = f"rakuten_lp_list_{today_str}.csv"
         df.to_csv(os.path.join(SAVE_DIR, csv_filename), index=False, encoding="utf-8-sig")
 
-        # HTML生成（レビューボタン付きにアップデート）
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -193,26 +226,19 @@ async def run():
                     padding: 10px 15px; border-radius: 0 5px 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 }}
                 .gallery {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; }}
-                
-                /* カードのスタイル強化 */
                 .card {{ background: white; width: 320px; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.2s; display: flex; flex-direction: column; }}
                 .card:hover {{ transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }}
-                
                 .tag {{ display: inline-block; padding: 4px 12px; border-radius: 20px; color: white; font-size: 11px; font-weight: bold; margin-bottom: 10px; align-self: flex-start; }}
                 .thumb-wrapper {{ cursor: zoom-in; overflow: hidden; border-radius: 6px; border: 1px solid #eee; height: 350px; position: relative; }}
                 .thumb {{ width: 100%; height: 100%; object-fit: cover; object-position: top; transition: opacity 0.3s; }}
                 .thumb:hover {{ opacity: 0.8; }}
-                
                 .catch-copy {{ font-size: 12px; color: #bf0000; font-weight: bold; margin: 10px 0 5px; line-height: 1.4; min-height: 34px; }}
                 .title {{ font-size: 13px; margin-bottom: 10px; height: 38px; overflow: hidden; line-height: 1.4; font-weight: bold; }}
                 .reason {{ font-size: 11px; color: #666; background: #f8f8f8; padding: 6px; border-radius: 4px; margin-bottom: 10px; }}
-                
-                /* ボタンエリア */
                 .btn-area {{ margin-top: auto; display: flex; gap: 5px; }}
                 a.link {{ flex: 1; text-align: center; background: #333; color: white; text-decoration: none; font-size: 11px; padding: 10px 0; border-radius: 6px; font-weight: bold; transition: opacity 0.2s; }}
                 a.review-link {{ flex: 1; text-align: center; background: #ff9900; color: white; text-decoration: none; font-size: 11px; padding: 10px 0; border-radius: 6px; font-weight: bold; transition: opacity 0.2s; }}
                 a:hover {{ opacity: 0.8; }}
-
                 .modal {{ display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }}
                 .modal-content-wrapper {{ position: relative; margin: 20px auto; width: 95%; max-width: 600px; background: white; border-radius: 8px; overflow: hidden; }}
                 .modal-header {{ background: #fff; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }}
@@ -269,13 +295,11 @@ async def run():
             if len(cat_items) > 0:
                 html_content += f'<h2 class="cat-title">{cat}</h2><div class="gallery">'
                 for item in cat_items:
-                    # レビューボタンの表示・非表示判定
                     review_btn = ""
                     if item['review_url']:
                         review_btn = f'<a href="{item["review_url"]}" target="_blank" class="review-link">⭐️ レビュー</a>'
                     else:
                         review_btn = '<span style="flex:1; text-align:center; font-size:11px; padding:10px 0; color:#ccc;">(レビューなし)</span>'
-
                     html_content += f"""
                         <div class="card">
                             <span class="tag" style="background: {item['color']}">{item['type']}</span>
@@ -297,12 +321,11 @@ async def run():
         report_filename = f"report_{today_str}.html"
         with open(os.path.join(SAVE_DIR, report_filename), "w", encoding="utf-8") as f:
             f.write(html_content)
-
-        print(f"\n✨ レビュー＆キャッチコピー付きレポート作成完了: {report_filename}")
+        print(f"\n✨ レポート作成完了: {report_filename}")
 
         report_files = glob.glob(os.path.join(SAVE_DIR, "report_*.html"))
         report_files.sort(reverse=True)
-
+        
         index_html = f"""
         <!DOCTYPE html>
         <html>
@@ -324,7 +347,7 @@ async def run():
         <body>
             <div class="container">
                 <h1>📚 LP分析レポート一覧</h1>
-                <p style="text-align:center; margin-bottom:30px;">過去の分析データを閲覧できます</p>
+                <p style="text-align:center; margin-bottom:30px;">過去{KEEP_DAYS}日分のデータを保存中</p>
                 <ul>
         """
         for filepath in report_files:
@@ -343,7 +366,9 @@ async def run():
         with open(os.path.join(SAVE_DIR, "index.html"), "w", encoding="utf-8") as f:
             f.write(index_html)
         print("✅ トップページ更新完了")
-    else:
-        print("\nデータが取れませんでした")
 
-asyncio.run(run())
+    else:
+        print("\n❌ データが取れませんでした")
+
+if __name__ == "__main__":
+    asyncio.run(run())
