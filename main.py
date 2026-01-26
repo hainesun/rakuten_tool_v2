@@ -57,9 +57,9 @@ async def run_fixed():
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
-        # 高さ20000px
+        # 高さ30000px
         context = await browser.new_context(
-            viewport={'width': 390, 'height': 20000}, 
+            viewport={'width': 390, 'height': 30000}, 
             device_scale_factor=2,
             user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         )
