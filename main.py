@@ -25,10 +25,10 @@ REVIEW_KEYWORDS = [
     "早い", "遅い", "丁寧", "雑", 
     "可愛い", "かわいい", "おしゃれ", "シンプル", "高見え", "安っぽい",
     "使いやすい", "便利", "軽い", "重い", "小さい", "大きい",
-    "リピ", "プレゼント", "満足", "残念", "おすすめ", 
-    "美味", "不味", "香り", "肌触り", "柔らかい", "硬い"
+    "リピ", "プレゼント", "満足", "残念", "おすすめ", "サイズ感", "ちょうどいい", "到着", "リピート",
+    "美味", "不味", "香り", "肌触り", "柔らかい", "硬い", "コスパ", "お得", "セール", "割引", "値上げ", "値下げ"
 ]
-SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフルエンサー", "見て購入", "紹介"]
+SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフルエンサー", "見て購入", "紹介", "Twitter", "X"]
 
 async def run_fixed():
     if not os.path.exists(SAVE_DIR):
@@ -57,9 +57,9 @@ async def run_fixed():
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
-        # 高さ8000px
+        # 高さ20000px
         context = await browser.new_context(
-            viewport={'width': 390, 'height': 8000}, 
+            viewport={'width': 390, 'height': 20000}, 
             device_scale_factor=2,
             user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         )
