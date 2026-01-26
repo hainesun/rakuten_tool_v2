@@ -9,12 +9,12 @@ import random
 
 # --- 🛠 設定エリア 🛠 ---
 TARGET_CATEGORIES = {
-    "🏆 総合": "https://ranking.rakuten.co.jp/daily/",
-    "👗 レディースファッション": "https://ranking.rakuten.co.jp/daily/100371/",
-    "👛 財布・ポーチ": "https://ranking.rakuten.co.jp/daily/216131/",
-    "🛋 インテリア": "https://ranking.rakuten.co.jp/daily/100804/",
-    "🍜 食品": "https://ranking.rakuten.co.jp/daily/100227/",
-    "💄 美容・コスメ": "https://ranking.rakuten.co.jp/daily/100939/",
+    # 今回ご指定いただいた5つの週間ランキング
+    "👛 レディース財布(週間)": "https://ranking.rakuten.co.jp/weekly/502368/",
+    "💼 メンズ財布(週間)": "https://ranking.rakuten.co.jp/weekly/552710/",
+    "🛋 インテリア(週間)": "https://ranking.rakuten.co.jp/weekly/100804/",
+    "🍳 キッチン用品(週間)": "https://ranking.rakuten.co.jp/weekly/558944/",
+    "💄 美容・コスメ(週間)": "https://ranking.rakuten.co.jp/weekly/100939/",
 }
 
 GET_LIMIT = 5       # 各カテゴリー5位まで
@@ -49,15 +49,16 @@ async def run():
                 continue
 
     async with async_playwright() as p:
-        # 仮想モニター対応の設定
+        # 仮想モニター対応
         browser = await p.chromium.launch(
             headless=False,  
             slow_mo=500,    
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
+        # 高さを 8000px に設定（長尺LP対応）
         context = await browser.new_context(
-            viewport={'width': 390, 'height': 844},
+            viewport={'width': 390, 'height': 8000}, 
             device_scale_factor=2,
             user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         )
@@ -107,29 +108,18 @@ async def run():
                         print(f"   [{i+1}/{GET_LIMIT}] 分析中...")
                         await page.goto(url, timeout=90000, wait_until="domcontentloaded")
                         
-                        # ▼▼▼【強化】画像読み込みのためのスクロール＆待機 ▼▼▼
+                        # 画像読み込みのためのスクロール
                         await page.evaluate("window.scrollTo(0, 0)")
-                        prev_height = -1
-                        scroll_count = 0
+                        for _ in range(3):
+                            await page.evaluate("window.scrollBy(0, 2500)")
+                            await page.wait_for_timeout(800)
                         
-                        # 少しゆっくりスクロールして画像を読み込ませる
-                        while scroll_count < 20: 
-                            await page.evaluate("window.scrollBy(0, 800)") # 刻みを細かく
-                            await page.wait_for_timeout(600) 
-                            curr_height = await page.evaluate("document.body.scrollHeight")
-                            if curr_height == prev_height: break
-                            prev_height = curr_height
-                            scroll_count += 1
-                        
-                        # 上に戻る
                         await page.evaluate("window.scrollTo(0, 0)")
                         
-                        # ★ここが重要：通信が落ち着くまで最大5秒待つ（画像ロード待ち）
                         try:
-                            await page.wait_for_load_state("networkidle", timeout=5000)
+                            await page.wait_for_load_state("networkidle", timeout=3000)
                         except:
-                            await page.wait_for_timeout(2000) # タイムアウトしても最低2秒は待つ
-                        # ▲▲▲ 待機強化完了 ▲▲▲
+                            await page.wait_for_timeout(2000)
                         
                         title = await page.title()
                         content_text = await page.content()
@@ -176,13 +166,11 @@ async def run():
                             reason = f"短尺({page_height}px)"
                             tag_color = "#555"
 
-                        # ▼▼▼【修正】ファイル名をシンプルにする（文字化け防止）▼▼▼
-                        # 日本語タイトルを使わず、カテゴリー名と順位だけの安全な名前にします
                         safe_cat_name = "".join(c for c in cat_name if c.isalnum())
                         img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.jpg"
                         img_path = os.path.join(SAVE_DIR, img_filename)
                         
-                        await page.screenshot(path=img_path, full_page=True, type="jpeg", quality=70)
+                        await page.screenshot(path=img_path)
                         
                         all_data_list.append({
                             "category": cat_name,
