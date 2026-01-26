@@ -271,4 +271,8 @@ async def run():
         with open(os.path.join(SAVE_DIR, "index.html"), "w", encoding="utf-8") as f:
             f.write(html_content)
 
-        print(f"\n✨ 全カテゴリー収集
+        print(f"\n✨ 全カテゴリー収集完了！ビューアー機能付きです。")
+    else:
+        print("\nデータが取れませんでした")
+
+asyncio.run(run())
