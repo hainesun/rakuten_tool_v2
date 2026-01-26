@@ -26,7 +26,7 @@ async def run():
     all_data_list = []
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(
             viewport={'width': 390, 'height': 844},
             device_scale_factor=2,

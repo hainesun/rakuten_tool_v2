@@ -1,0 +1,40 @@
+name: Daily Ranking Scrape
+
+on:
+  schedule:
+    # 毎日 日本時間の朝9:00 (UTC 0:00) に実行
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 手動ボタンでも実行できるようにする
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリの取得
+        uses: actions/checkout@v3
+
+      - name: Pythonのセットアップ
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: 必要なライブラリのインストール
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+
+      - name: スクレイピング実行
+        run: python main.py
+
+      - name: 結果を保存して更新
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          # 変更がある時だけコミットする設定
+          git commit -m "Auto update daily report" || exit 0
+          git push
