@@ -9,7 +9,6 @@ import random
 
 # --- 🛠 設定エリア 🛠 ---
 TARGET_CATEGORIES = {
-    # 今回ご指定いただいた5つの週間ランキング
     "👛 レディース財布(週間)": "https://ranking.rakuten.co.jp/weekly/502368/",
     "💼 メンズ財布(週間)": "https://ranking.rakuten.co.jp/weekly/552710/",
     "🛋 インテリア(週間)": "https://ranking.rakuten.co.jp/weekly/100804/",
@@ -21,11 +20,17 @@ GET_LIMIT = 5       # 各カテゴリー5位まで
 SAVE_DIR = "lp_stock"
 PAGE_PASSWORD = "1234" 
 KEEP_DAYS = 60      # 過去何日分を残すか
-# -----------------------
 
+REVIEW_KEYWORDS = [
+    "早い", "遅い", "丁寧", "雑", 
+    "可愛い", "かわいい", "おしゃれ", "シンプル", "高見え", "安っぽい",
+    "使いやすい", "便利", "軽い", "重い", "小さい", "大きい",
+    "リピ", "プレゼント", "満足", "残念", "おすすめ", 
+    "美味", "不味", "香り", "肌触り", "柔らかい", "硬い"
+]
 SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフルエンサー", "見て購入", "紹介"]
 
-async def run():
+async def run_fixed():
     if not os.path.exists(SAVE_DIR):
         os.makedirs(SAVE_DIR)
 
@@ -33,8 +38,7 @@ async def run():
     today = datetime.date.today()
     today_str = str(today)
 
-    # ▼▼▼ 1. お掃除機能 ▼▼▼
-    print(f"\n🧹 データの整理を開始します（保存期限: {KEEP_DAYS}日）...")
+    # お掃除
     limit_date = today - datetime.timedelta(days=KEEP_DAYS)
     files = glob.glob(os.path.join(SAVE_DIR, "*"))
     for f in files:
@@ -42,53 +46,43 @@ async def run():
         match = re.search(r"(\d{4}-\d{2}-\d{2})", filename)
         if match:
             try:
-                file_date = datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date()
-                if file_date < limit_date:
+                if datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date() < limit_date:
                     os.remove(f)
-            except:
-                continue
+            except: continue
 
     async with async_playwright() as p:
-        # 仮想モニター対応
         browser = await p.chromium.launch(
             headless=False,  
             slow_mo=500,    
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
-        # 高さを 8000px に設定（長尺LP対応）
+        # 高さ8000px
         context = await browser.new_context(
             viewport={'width': 390, 'height': 8000}, 
             device_scale_factor=2,
             user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         )
         page = await context.new_page()
-
         await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
         for cat_name, cat_url in TARGET_CATEGORIES.items():
             print(f"\n🔍 【{cat_name}】 のランキングを取得中...")
-            
             try:
                 await page.goto(cat_url, timeout=90000, wait_until="domcontentloaded")
-                
                 try:
                     await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
                     await page.wait_for_timeout(2000) 
                 except:
-                    print("   ⚠️ 商品リストが見つかりません（リロード試行）")
+                    print("   ⚠️ リロード試行...")
                     await page.reload(wait_until="domcontentloaded")
                     await page.wait_for_timeout(5000)
-                    try:
-                        await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
-                    except:
-                        print("   ❌ ダメでした。スキップします。")
-                        continue
+                    try: await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
+                    except: continue
 
                 all_links = await page.locator("a").all()
                 target_urls = []
                 seen_items = set()
-
                 for link in all_links:
                     if len(target_urls) >= GET_LIMIT: break
                     try:
@@ -98,40 +92,44 @@ async def run():
                             if clean_url not in seen_items:
                                 seen_items.add(clean_url)
                                 target_urls.append(clean_url)
-                    except:
-                        continue
+                    except: continue
                 
                 print(f"   -> {len(target_urls)}個の商品リンクを確保")
 
                 for i, url in enumerate(target_urls):
                     try:
                         print(f"   [{i+1}/{GET_LIMIT}] 分析中...")
+                        
+                        # 1. 商品ページへ行く
                         await page.goto(url, timeout=90000, wait_until="domcontentloaded")
                         
-                        # 画像読み込みのためのスクロール
+                        # 2. 画像用スクロール & 撮影
                         await page.evaluate("window.scrollTo(0, 0)")
                         for _ in range(3):
                             await page.evaluate("window.scrollBy(0, 2500)")
-                            await page.wait_for_timeout(800)
-                        
+                            await page.wait_for_timeout(500)
                         await page.evaluate("window.scrollTo(0, 0)")
+                        try: await page.wait_for_load_state("networkidle", timeout=3000)
+                        except: await page.wait_for_timeout(2000)
+
+                        safe_cat_name = "".join(c for c in cat_name if c.isalnum())
+                        img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.jpg"
+                        img_path = os.path.join(SAVE_DIR, img_filename)
                         
-                        try:
-                            await page.wait_for_load_state("networkidle", timeout=3000)
-                        except:
-                            await page.wait_for_timeout(2000)
-                        
+                        # ★【重要】画質を50%に落として軽量化（GitHub Pages対策）
+                        await page.screenshot(path=img_path, type="jpeg", quality=50)
+
+                        # 3. テキストデータ取得
                         title = await page.title()
                         content_text = await page.content()
                         page_height = await page.evaluate("document.body.scrollHeight")
-
+                        
                         review_url = ""
                         try:
                             review_link_loc = page.locator("a[href*='review.rakuten.co.jp']").first
                             if await review_link_loc.count() > 0:
                                 review_url = await review_link_loc.get_attribute("href")
-                        except:
-                            pass
+                        except: pass
                         
                         catch_copy = ""
                         try:
@@ -139,8 +137,7 @@ async def run():
                             if await catch_loc.count() > 0:
                                 txt = await catch_loc.text_content()
                                 catch_copy = txt.strip()[:60] + "..."
-                        except:
-                            pass
+                        except: pass
 
                         sns_score = 0
                         found_keywords = []
@@ -148,29 +145,41 @@ async def run():
                             if kw in content_text:
                                 sns_score += 1
                                 found_keywords.append(kw)
-                        
+
+                        # 4. レビューページへ移動して分析
+                        review_summary = "なし"
+                        review_keywords_list = []
+                        if review_url:
+                            try:
+                                await page.goto(review_url, timeout=30000, wait_until="domcontentloaded")
+                                review_text_all = await page.content()
+                                for k in REVIEW_KEYWORDS:
+                                    if k in review_text_all:
+                                        review_keywords_list.append(k)
+                                if review_keywords_list:
+                                    unique = list(set(review_keywords_list))
+                                    review_summary = " ".join(unique[:5])
+                                else:
+                                    review_summary = "特徴なし"
+                            except:
+                                review_summary = "取得失敗"
+
+                        # 判定
                         prediction = "不明"
                         reason = ""
                         tag_color = "gray"
-
                         if sns_score >= 1:
-                            prediction = "SNS/指名買い型"
-                            reason = f"キーワード: {','.join(found_keywords)}"
+                            prediction = "SNS型"
+                            reason = f"KW:{','.join(found_keywords)}"
                             tag_color = "#e1306c"
                         elif page_height > 25000:
                             prediction = "説得型LP"
-                            reason = f"長尺({page_height}px)"
+                            reason = f"長尺"
                             tag_color = "#bf0000"
                         else:
-                            prediction = "シンプル型"
-                            reason = f"短尺({page_height}px)"
+                            prediction = "シンプル"
+                            reason = f"短尺"
                             tag_color = "#555"
-
-                        safe_cat_name = "".join(c for c in cat_name if c.isalnum())
-                        img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.jpg"
-                        img_path = os.path.join(SAVE_DIR, img_filename)
-                        
-                        await page.screenshot(path=img_path)
                         
                         all_data_list.append({
                             "category": cat_name,
@@ -178,6 +187,7 @@ async def run():
                             "title": title,
                             "catch_copy": catch_copy,
                             "review_url": review_url,
+                            "review_summary": review_summary,
                             "type": prediction,
                             "reason": reason,
                             "url": url,
@@ -186,10 +196,10 @@ async def run():
                         })
 
                     except Exception as e:
-                        print(f"   スキップ: {e}")
+                        print(f"   エラー: {e}")
                         continue
             except Exception as e:
-                print(f"   カテゴリー取得エラー: {e}")
+                print(f"   カテゴリーエラー: {e}")
                 continue
         
         await browser.close()
@@ -199,6 +209,7 @@ async def run():
         csv_filename = f"rakuten_lp_list_{today_str}.csv"
         df.to_csv(os.path.join(SAVE_DIR, csv_filename), index=False, encoding="utf-8-sig")
 
+        # HTML生成
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -223,7 +234,7 @@ async def run():
                 .thumb:hover {{ opacity: 0.8; }}
                 .catch-copy {{ font-size: 12px; color: #bf0000; font-weight: bold; margin: 10px 0 5px; line-height: 1.4; min-height: 34px; }}
                 .title {{ font-size: 13px; margin-bottom: 10px; height: 38px; overflow: hidden; line-height: 1.4; font-weight: bold; }}
-                .reason {{ font-size: 11px; color: #666; background: #f8f8f8; padding: 6px; border-radius: 4px; margin-bottom: 10px; }}
+                .review-box {{ font-size: 11px; background: #eef9ff; color: #0056b3; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-weight:bold; }}
                 .btn-area {{ margin-top: auto; display: flex; gap: 5px; }}
                 a.link {{ flex: 1; text-align: center; background: #333; color: white; text-decoration: none; font-size: 11px; padding: 10px 0; border-radius: 6px; font-weight: bold; transition: opacity 0.2s; }}
                 a.review-link {{ flex: 1; text-align: center; background: #ff9900; color: white; text-decoration: none; font-size: 11px; padding: 10px 0; border-radius: 6px; font-weight: bold; transition: opacity 0.2s; }}
@@ -297,7 +308,9 @@ async def run():
                             </div>
                             <div class="catch-copy">{item['catch_copy']}</div>
                             <div class="title"><b>{item['rank']}位:</b> {item['title'][:35]}...</div>
-                            <div class="reason">💡 {item['reason']}</div>
+                            
+                            <div class="review-box">💬 口コミ: {item['review_summary']}</div>
+                            
                             <div class="btn-area">
                                 <a href="{item['url']}" target="_blank" class="link">商品ページ</a>
                                 {review_btn}
@@ -360,4 +373,4 @@ async def run():
         print("\n❌ データが取れませんでした")
 
 if __name__ == "__main__":
-    asyncio.run(run())
+    asyncio.run(run_fixed())
