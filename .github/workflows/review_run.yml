@@ -1,0 +1,40 @@
+name: Review Analyzer
+
+on:
+  workflow_dispatch: # 手動で「分析スタート」ボタンを押して動かします
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリの取得
+        uses: actions/checkout@v3
+
+      - name: Pythonのセットアップ
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: 必要なライブラリと仮想モニターのインストール
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps
+
+      - name: レビュー分析の実行
+        # ここで新しいファイル (review_analyze.py) を指定します
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" python review_analyze.py
+
+      - name: 結果を保存して更新
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Update review analysis report" || exit 0
+          git push
