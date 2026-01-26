@@ -92,10 +92,13 @@ async def run():
                     tag_color = "#555"
 
                 safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '_', '-'))[:20]
-                img_filename = f"rank{i+1}_{safe_title}.png"
+                
+                # ▼▼▼【変更点1】拡張子を .png から .jpg に変更 ▼▼▼
+                img_filename = f"rank{i+1}_{safe_title}.jpg"
                 img_path = os.path.join(SAVE_DIR, img_filename)
                 
-                await page.screenshot(path=img_path, full_page=True)
+                # ▼▼▼【変更点2】type="jpeg" と quality=70 を追加 ▼▼▼
+                await page.screenshot(path=img_path, full_page=True, type="jpeg", quality=70)
                 
                 data_list.append({
                     "rank": i+1,
