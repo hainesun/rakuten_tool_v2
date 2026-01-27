@@ -52,7 +52,6 @@ async def run_fixed():
             except: continue
 
     async with async_playwright() as p:
-        # ★GitHubで動くように headless=True に戻してあります
         browser = await p.chromium.launch(
             headless=True,
             slow_mo=500,    
@@ -115,11 +114,10 @@ async def run_fixed():
 
                         safe_cat_name = "".join(c for c in cat_name if c.isalnum())
                         
-                        # ★ここを .jpg に戻しました
                         img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.jpg"
                         img_path = os.path.join(SAVE_DIR, img_filename)
                         
-                        # ★通常のJPEG保存（画質50%）に戻しました
+                        # JPEG保存（画質50%）
                         await page.screenshot(path=img_path, type="jpeg", quality=50)
 
                         # 3. テキストデータ取得
@@ -194,7 +192,7 @@ async def run_fixed():
                             "type": prediction,
                             "reason": reason,
                             "url": url,
-                            "img": img_filename, # ここで .jpg の名前が入る
+                            "img": img_filename,
                             "color": tag_color
                         })
 
@@ -352,28 +350,4 @@ async def run_fixed():
         <body>
             <div class="container">
                 <h1>📚 LP分析レポート一覧</h1>
-                <p style="text-align:center; margin-bottom:30px;">過去{KEEP_DAYS}日分のデータを保存中</p>
-                <ul>
-        """
-        for filepath in report_files:
-            filename = os.path.basename(filepath)
-            date_str = filename.replace("report_", "").replace(".html", "")
-            index_html += f"""
-                <li>
-                    <a href="{filename}" class="report-link">
-                        📂 {date_str} のレポート
-                        <span class="date">クリックして閲覧</span>
-                    </a>
-                </li>
-            """
-        index_html += "</ul></div></body></html>"
-        
-        with open(os.path.join(SAVE_DIR, "index.html"), "w", encoding="utf-8") as f:
-            f.write(index_html)
-        print("✅ トップページ更新完了")
-
-    else:
-        print("\n❌ データが取れませんでした")
-
-if __name__ == "__main__":
-    asyncio.run(run_fixed())
+                <p style="text-align:center; margin-bottom:30px;">過去{KEEP

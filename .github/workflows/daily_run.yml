@@ -2,7 +2,7 @@ name: Daily Ranking Scrape
 
 on:
   schedule:
-    # 日本時間の朝5:15 (UTC 20:15) に戻す
+    # 日本時間の朝5:15 (UTC 20:15) に実行
     - cron: '15 20 * * *'
   workflow_dispatch: # 手動実行ボタン
 
@@ -30,14 +30,18 @@ jobs:
           playwright install chromium
           playwright install-deps
 
-      - name: スクレイピング実行 (仮想モニターで画面ありを偽装)
-        # ★ここが魔法のコマンドです！(xvfb-run)
+      # 1. ランキング取得 (main.py)
+      - name: ランキングスクレイピング実行
         run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" python main.py
+
+      # 2. レビュー分析 (review_analyze.py)
+      - name: レビュー詳細分析を実行
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" python review_analyze.py
 
       - name: 結果を保存して更新
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git commit -m "Auto update daily report" || exit 0
+          git commit -m "Auto update daily & review report" || exit 0
           git push

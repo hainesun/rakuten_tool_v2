@@ -258,4 +258,5 @@ async def run():
         f.write(html)
 
 if __name__ == "__main__":
+    import asyncio
     asyncio.run(run())
