@@ -3,7 +3,7 @@ name: Daily Ranking Scrape
 on:
   schedule:
     # 日本時間の朝5:00 (UTC 20:00) に実行
-    - cron: '15 20 * * *'
+   - cron: '30 4 * * *'
   workflow_dispatch: # 手動実行ボタン
 
 permissions:
