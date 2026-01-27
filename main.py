@@ -6,9 +6,6 @@ import datetime
 import glob
 import re
 import random
-# --- ↓ 画像処理用ライブラリ (WebP変換用) ---
-from PIL import Image
-import io
 
 # --- 🛠 設定エリア (デイリー版) 🛠 ---
 TARGET_CATEGORIES = {
@@ -24,7 +21,7 @@ SAVE_DIR = "lp_stock"
 PAGE_PASSWORD = "1234" 
 KEEP_DAYS = 60      # 過去何日分を残すか
 
-# ★最新のキーワードリスト
+# キーワードリスト
 REVIEW_KEYWORDS = [
     "早い", "遅い", "丁寧", "雑", 
     "可愛い", "かわいい", "おしゃれ", "シンプル", "高見え", "安っぽい",
@@ -42,7 +39,7 @@ async def run_fixed():
     today = datetime.date.today()
     today_str = str(today)
 
-    # お掃除（古いファイルの削除）
+    # お掃除
     limit_date = today - datetime.timedelta(days=KEEP_DAYS)
     files = glob.glob(os.path.join(SAVE_DIR, "*"))
     for f in files:
@@ -55,15 +52,15 @@ async def run_fixed():
             except: continue
 
     async with async_playwright() as p:
+        # ★GitHubで動くように headless=True に戻してあります
         browser = await p.chromium.launch(
-            headless=True,  # GitHub Actionsで動かすためTrue推奨
+            headless=True,
             slow_mo=500,    
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
-        # 高さ8000pxの仮想スマホ
         context = await browser.new_context(
-            viewport={'width': 390, 'height': 8000}, 
+            viewport={'width': 390, 'height': 25000}, 
             device_scale_factor=2,
             user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         )
@@ -118,14 +115,12 @@ async def run_fixed():
 
                         safe_cat_name = "".join(c for c in cat_name if c.isalnum())
                         
-                        # ★ WebP形式に変更
-                        img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.webp"
+                        # ★ここを .jpg に戻しました
+                        img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.jpg"
                         img_path = os.path.join(SAVE_DIR, img_filename)
                         
-                        # ★ メモリ上でPNG撮影 → PillowでWebP変換して保存（軽量化）
-                        img_bytes = await page.screenshot(type="png")
-                        image = Image.open(io.BytesIO(img_bytes))
-                        image.save(img_path, format="webp", quality=50)
+                        # ★通常のJPEG保存（画質50%）に戻しました
+                        await page.screenshot(path=img_path, type="jpeg", quality=50)
 
                         # 3. テキストデータ取得
                         title = await page.title()
@@ -199,7 +194,7 @@ async def run_fixed():
                             "type": prediction,
                             "reason": reason,
                             "url": url,
-                            "img": img_filename, # ここで .webp の名前が入る
+                            "img": img_filename, # ここで .jpg の名前が入る
                             "color": tag_color
                         })
 
