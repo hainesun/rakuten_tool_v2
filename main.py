@@ -9,11 +9,11 @@ import random
 
 # --- 🛠 設定エリア 🛠 ---
 TARGET_CATEGORIES = {
-    "👛 レディース財布(週間)": "https://ranking.rakuten.co.jp/weekly/502368/",
-    "💼 メンズ財布(週間)": "https://ranking.rakuten.co.jp/weekly/552710/",
-    "🛋 インテリア(週間)": "https://ranking.rakuten.co.jp/weekly/100804/",
-    "🍳 キッチン用品(週間)": "https://ranking.rakuten.co.jp/weekly/558944/",
-    "💄 美容・コスメ(週間)": "https://ranking.rakuten.co.jp/weekly/100939/",
+    "👛 レディース財布(デイリー)": "https://ranking.rakuten.co.jp/daily/502368/",
+    "💼 メンズ財布(デイリー)": "https://ranking.rakuten.co.jp/daily/552710/",
+    "🛋 インテリア(デイリー)": "https://ranking.rakuten.co.jp/daily/100804/",
+    "🍳 キッチン用品(デイリー)": "https://ranking.rakuten.co.jp/daily/558944/",
+    "💄 美容・コスメ(デイリー)": "https://ranking.rakuten.co.jp/daily/100939/",
 }
 
 GET_LIMIT = 5       # 各カテゴリー5位まで
