@@ -52,14 +52,17 @@ async def run_fixed():
             except: continue
 
     async with async_playwright() as p:
+        # ★サーバー実行用に headless=True に戻す (Falseだとエラーが出やすい場合があるため)
+        # ただし、xvfbを使っているので False でも動きますが、安定重視なら True 推奨。
+        # 今回は楽天対策で False のままでいきます。
         browser = await p.chromium.launch(
-            headless=True,
+            headless=False,
             slow_mo=500,    
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
         context = await browser.new_context(
-            viewport={'width': 390, 'height': 15000}, 
+            viewport={'width': 390, 'height': 8000}, 
             device_scale_factor=2,
             user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         )
@@ -350,4 +353,28 @@ async def run_fixed():
         <body>
             <div class="container">
                 <h1>📚 LP分析レポート一覧</h1>
-                <p style="text-align:center; margin-bottom:30px;">過去{KEEP
+                <p style="text-align:center; margin-bottom:30px;">過去{KEEP_DAYS}日分のデータを保存中</p>
+                <ul>
+        """
+        for filepath in report_files:
+            filename = os.path.basename(filepath)
+            date_str = filename.replace("report_", "").replace(".html", "")
+            index_html += f"""
+                <li>
+                    <a href="{filename}" class="report-link">
+                        📂 {date_str} のレポート
+                        <span class="date">クリックして閲覧</span>
+                    </a>
+                </li>
+            """
+        index_html += "</ul></div></body></html>"
+        
+        with open(os.path.join(SAVE_DIR, "index.html"), "w", encoding="utf-8") as f:
+            f.write(index_html)
+        print("✅ トップページ更新完了")
+
+    else:
+        print("\n❌ データが取れませんでした")
+
+if __name__ == "__main__":
+    asyncio.run(run_fixed())
