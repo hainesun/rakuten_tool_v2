@@ -6,8 +6,11 @@ import datetime
 import glob
 import re
 import random
+# --- ↓ 画像処理用ライブラリ (WebP変換用) ---
+from PIL import Image
+import io
 
-# --- 🛠 設定エリア 🛠 ---
+# --- 🛠 設定エリア (デイリー版) 🛠 ---
 TARGET_CATEGORIES = {
     "👛 レディース財布(デイリー)": "https://ranking.rakuten.co.jp/daily/502368/",
     "💼 メンズ財布(デイリー)": "https://ranking.rakuten.co.jp/daily/552710/",
@@ -21,6 +24,7 @@ SAVE_DIR = "lp_stock"
 PAGE_PASSWORD = "1234" 
 KEEP_DAYS = 60      # 過去何日分を残すか
 
+# ★最新のキーワードリスト
 REVIEW_KEYWORDS = [
     "早い", "遅い", "丁寧", "雑", 
     "可愛い", "かわいい", "おしゃれ", "シンプル", "高見え", "安っぽい",
@@ -28,7 +32,7 @@ REVIEW_KEYWORDS = [
     "リピ", "プレゼント", "満足", "残念", "おすすめ", "サイズ感", "ちょうどいい", "到着", "リピート",
     "美味", "不味", "香り", "肌触り", "柔らかい", "硬い", "コスパ", "お得", "セール", "割引", "値上げ", "値下げ"
 ]
-SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフルエンサー", "見て購入", "紹介", "Twitter", "X"]
+SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフルエンサー", "見て購入", "紹介"]
 
 async def run_fixed():
     if not os.path.exists(SAVE_DIR):
@@ -38,7 +42,7 @@ async def run_fixed():
     today = datetime.date.today()
     today_str = str(today)
 
-    # お掃除
+    # お掃除（古いファイルの削除）
     limit_date = today - datetime.timedelta(days=KEEP_DAYS)
     files = glob.glob(os.path.join(SAVE_DIR, "*"))
     for f in files:
@@ -52,14 +56,14 @@ async def run_fixed():
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(
-            headless=False,  
+            headless=True,  # GitHub Actionsで動かすためTrue推奨
             slow_mo=500,    
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
-        # 高さ30000px
+        # 高さ8000pxの仮想スマホ
         context = await browser.new_context(
-            viewport={'width': 390, 'height': 30000}, 
+            viewport={'width': 390, 'height': 8000}, 
             device_scale_factor=2,
             user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         )
@@ -113,11 +117,15 @@ async def run_fixed():
                         except: await page.wait_for_timeout(2000)
 
                         safe_cat_name = "".join(c for c in cat_name if c.isalnum())
-                        img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.jpg"
+                        
+                        # ★ WebP形式に変更
+                        img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.webp"
                         img_path = os.path.join(SAVE_DIR, img_filename)
                         
-                        # ★【重要】画質を50%に落として軽量化（GitHub Pages対策）
-                        await page.screenshot(path=img_path, type="jpeg", quality=50)
+                        # ★ メモリ上でPNG撮影 → PillowでWebP変換して保存（軽量化）
+                        img_bytes = await page.screenshot(type="png")
+                        image = Image.open(io.BytesIO(img_bytes))
+                        image.save(img_path, format="webp", quality=50)
 
                         # 3. テキストデータ取得
                         title = await page.title()
@@ -191,7 +199,7 @@ async def run_fixed():
                             "type": prediction,
                             "reason": reason,
                             "url": url,
-                            "img": img_filename,
+                            "img": img_filename, # ここで .webp の名前が入る
                             "color": tag_color
                         })
 
