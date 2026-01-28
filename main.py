@@ -18,6 +18,7 @@ TARGET_CATEGORIES = {
 
 GET_LIMIT = 5       # 各カテゴリー5位まで
 SAVE_DIR = "lp_stock"
+REVIEW_DIR = "review_report" # レビューレポートの場所（リンク用）
 PAGE_PASSWORD = "1234" 
 KEEP_DAYS = 60      # 過去何日分を残すか
 
@@ -52,9 +53,7 @@ async def run_fixed():
             except: continue
 
     async with async_playwright() as p:
-        # ★サーバー実行用に headless=True に戻す (Falseだとエラーが出やすい場合があるため)
-        # ただし、xvfbを使っているので False でも動きますが、安定重視なら True 推奨。
-        # 今回は楽天対策で False のままでいきます。
+        # 安定動作のため headless=False 推奨 (GitHub Actionsでは xvfb 使用)
         browser = await p.chromium.launch(
             headless=False,
             slow_mo=500,    
@@ -83,23 +82,37 @@ async def run_fixed():
                     try: await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
                     except: continue
 
-                all_links = await page.locator("a").all()
-                target_urls = []
+                # ★ここでサムネイル画像も一緒に取得するロジックに変更
+                all_links = await page.locator("div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
+                thumb_imgs = await page.locator("div.rnkRanking_after img").all() # サムネ画像群
+
+                target_items = []
                 seen_items = set()
-                for link in all_links:
-                    if len(target_urls) >= GET_LIMIT: break
+                
+                # リンクとサムネをペアで確保
+                for i, link in enumerate(all_links):
+                    if len(target_items) >= GET_LIMIT: break
                     try:
                         url = await link.get_attribute("href")
                         if url and "item.rakuten.co.jp" in url:
                             clean_url = url.split('?')[0]
                             if clean_url not in seen_items:
                                 seen_items.add(clean_url)
-                                target_urls.append(clean_url)
+                                
+                                # サムネイルURLを取得（存在すれば）
+                                thumb_src = ""
+                                if i < len(thumb_imgs):
+                                    thumb_src = await thumb_imgs[i].get_attribute("src")
+                                
+                                target_items.append({"url": clean_url, "thumb": thumb_src})
                     except: continue
                 
-                print(f"   -> {len(target_urls)}個の商品リンクを確保")
+                print(f"   -> {len(target_items)}個の商品リンクを確保")
 
-                for i, url in enumerate(target_urls):
+                for i, item in enumerate(target_items):
+                    url = item["url"]
+                    thumb_url = item["thumb"]
+                    
                     try:
                         print(f"   [{i+1}/{GET_LIMIT}] 分析中...")
                         
@@ -196,6 +209,7 @@ async def run_fixed():
                             "reason": reason,
                             "url": url,
                             "img": img_filename,
+                            "thumb_url": thumb_url, # ★サムネ追加
                             "color": tag_color
                         })
 
@@ -224,6 +238,7 @@ async def run_fixed():
             <style>
                 body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 20px; display: none; color: #333; }}
                 h1 {{ text-align: center; margin-bottom: 30px; }}
+                .nav-link {{ display:block; text-align:center; margin-bottom:20px; font-weight:bold; color:#003366; }}
                 h2.cat-title {{ 
                     margin-top: 50px; margin-bottom: 20px; padding-left: 15px; 
                     border-left: 5px solid #bf0000; font-size: 24px; background: #fff;
@@ -233,6 +248,12 @@ async def run_fixed():
                 .card {{ background: white; width: 320px; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.2s; display: flex; flex-direction: column; }}
                 .card:hover {{ transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }}
                 .tag {{ display: inline-block; padding: 4px 12px; border-radius: 20px; color: white; font-size: 11px; font-weight: bold; margin-bottom: 10px; align-self: flex-start; }}
+                
+                /* サムネイルとランクの表示 */
+                .rank-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }}
+                .rank-thumb {{ width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #eee; }}
+                .rank-num {{ font-size: 16px; font-weight: bold; color: #333; }}
+
                 .thumb-wrapper {{ cursor: zoom-in; overflow: hidden; border-radius: 6px; border: 1px solid #eee; height: 350px; position: relative; }}
                 .thumb {{ width: 100%; height: 100%; object-fit: cover; object-position: top; transition: opacity 0.3s; }}
                 .thumb:hover {{ opacity: 0.8; }}
@@ -279,7 +300,8 @@ async def run_fixed():
         <body>
             <h1>📅 分析レポート ({today_str})</h1>
             <div style="text-align:center; margin-bottom:20px;">
-                <a href="index.html" style="color:#666; text-decoration:underline;">← トップページ（日付一覧）に戻る</a>
+                <a href="../index.html" class="nav-link">🏠 ホームに戻る</a>
+                <a href="index.html" style="color:#666; text-decoration:underline;">← 過去の日付一覧に戻る</a>
             </div>
 
             <div id="imageModal" class="modal">
@@ -304,14 +326,24 @@ async def run_fixed():
                         review_btn = f'<a href="{item["review_url"]}" target="_blank" class="review-link">⭐️ レビュー</a>'
                     else:
                         review_btn = '<span style="flex:1; text-align:center; font-size:11px; padding:10px 0; color:#ccc;">(レビューなし)</span>'
+                    
+                    # サムネイル表示用HTML
+                    thumb_html = ""
+                    if item['thumb_url']:
+                        thumb_html = f'<img src="{item["thumb_url"]}" class="rank-thumb">'
+
                     html_content += f"""
                         <div class="card">
                             <span class="tag" style="background: {item['color']}">{item['type']}</span>
+                            <div class="rank-header">
+                                {thumb_html}
+                                <span class="rank-num">{item['rank']}位</span>
+                            </div>
                             <div class="thumb-wrapper" onclick="openModal('{item['img']}', '{item['title']}')">
                                 <img src="{item['img']}" class="thumb" loading="lazy">
                             </div>
                             <div class="catch-copy">{item['catch_copy']}</div>
-                            <div class="title"><b>{item['rank']}位:</b> {item['title'][:35]}...</div>
+                            <div class="title">{item['title'][:35]}...</div>
                             
                             <div class="review-box">💬 口コミ: {item['review_summary']}</div>
                             
@@ -329,6 +361,7 @@ async def run_fixed():
             f.write(html_content)
         print(f"\n✨ レポート作成完了: {report_filename}")
 
+        # --- アーカイブページ (lp_stock/index.html) ---
         report_files = glob.glob(os.path.join(SAVE_DIR, "report_*.html"))
         report_files.sort(reverse=True)
         
@@ -348,11 +381,13 @@ async def run_fixed():
                 a.report-link {{ display: block; padding: 15px; background: #f8f9fa; border-left: 5px solid #bf0000; text-decoration: none; color: #333; font-weight: bold; transition: 0.2s; border-radius: 4px; }}
                 a.report-link:hover {{ background: #bf0000; color: white; }}
                 .date {{ font-size: 14px; color: #666; font-weight: normal; margin-left: 10px; }}
+                .home-btn {{ display:block; text-align:center; margin-bottom:20px; font-weight:bold; color:#003366; text-decoration:none; padding:10px; background:#e0e0e0; border-radius:5px; }}
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>📚 LP分析レポート一覧</h1>
+                <a href="../index.html" class="home-btn">🏠 総合トップページに戻る</a>
+                <h1>📚 デイリーランキング<br>画像レポート一覧</h1>
                 <p style="text-align:center; margin-bottom:30px;">過去{KEEP_DAYS}日分のデータを保存中</p>
                 <ul>
         """
@@ -371,10 +406,69 @@ async def run_fixed():
         
         with open(os.path.join(SAVE_DIR, "index.html"), "w", encoding="utf-8") as f:
             f.write(index_html)
-        print("✅ トップページ更新完了")
+        print("✅ アーカイブページ更新完了")
 
     else:
         print("\n❌ データが取れませんでした")
+
+    # --- ★ここが新機能！ 総合トップページ (index.html) の生成 ---
+    # ルートディレクトリに index.html を作成します
+    top_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>楽天分析ツール ポータル</title>
+        <style>
+            body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 40px; color: #333; display: flex; justify-content: center; align-items: center; min-height: 80vh; }}
+            .container {{ text-align: center; max-width: 600px; width: 100%; }}
+            h1 {{ color: #bf0000; margin-bottom: 40px; font-size: 28px; }}
+            .menu-grid {{ display: grid; gap: 20px; }}
+            .menu-card {{ 
+                background: white; padding: 30px; border-radius: 15px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-decoration: none; color: #333; 
+                transition: transform 0.2s, box-shadow 0.2s; border-left: 8px solid #ccc;
+                display: flex; flex-direction: column; align-items: center;
+            }}
+            .menu-card:hover {{ transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }}
+            
+            .card-lp {{ border-left-color: #bf0000; }}
+            .card-review {{ border-left-color: #003366; }}
+            
+            .icon {{ font-size: 40px; margin-bottom: 10px; }}
+            .card-title {{ font-size: 20px; font-weight: bold; margin-bottom: 5px; }}
+            .card-desc {{ font-size: 14px; color: #666; }}
+            .timestamp {{ margin-top: 40px; font-size: 12px; color: #999; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 楽天市場 分析ツール v2</h1>
+            
+            <div class="menu-grid">
+                <a href="{SAVE_DIR}/index.html" class="menu-card card-lp">
+                    <div class="icon">📊</div>
+                    <div class="card-title">デイリーランキング画像</div>
+                    <div class="card-desc">毎日のランキング商品LPを画像で保存・一覧化</div>
+                </a>
+
+                <a href="{REVIEW_DIR}/index.html" class="menu-card card-review">
+                    <div class="icon">🧐</div>
+                    <div class="card-title">レビュー深掘り分析</div>
+                    <div class="card-desc">「良い点・悪い点・本音」をAIが抽出して要約</div>
+                </a>
+            </div>
+
+            <div class="timestamp">最終更新: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(top_html)
+    print("✅ 総合トップページ生成完了 (index.html)")
 
 if __name__ == "__main__":
     asyncio.run(run_fixed())
