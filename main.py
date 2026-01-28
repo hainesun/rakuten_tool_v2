@@ -71,26 +71,20 @@ async def run_fixed():
             print(f"\n🔍 【{cat_name}】 のランキングを取得中...")
             try:
                 await page.goto(cat_url, timeout=90000, wait_until="domcontentloaded")
-                try:
-                    await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
-                    await page.wait_for_timeout(2000) 
-                except:
-                    print("   ⚠️ リロード試行...")
-                    await page.reload(wait_until="domcontentloaded")
-                    await page.wait_for_timeout(5000)
-                    try: await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
-                    except: continue
+                
+                # 画像を読み込ませるためのスクロール
+                await page.evaluate("window.scrollBy(0, 1000)")
+                await page.wait_for_timeout(1000)
 
-                # ★修正ポイント: 全順位共通の画像セレクタに変更 (div.rnkRanking_image img)
+                # リンク取得
                 all_links = await page.locator("div.rnkRanking_image a[href*='item.rakuten.co.jp'], div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
                 
-                # サムネイル画像の取得方法を強化
-                thumb_imgs = await page.locator("div.rnkRanking_image img").all()
+                # ★修正ポイント: 上位(rnkRanking_image)と下位(rnkRanking_after)の両方の画像を取得
+                thumb_imgs = await page.locator("div.rnkRanking_image img, div.rnkRanking_after img").all()
 
                 target_items = []
                 seen_items = set()
                 
-                # リンクとサムネをペアで確保
                 for i, link in enumerate(all_links):
                     if len(target_items) >= GET_LIMIT: break
                     try:
@@ -104,11 +98,9 @@ async def run_fixed():
                                 thumb_src = ""
                                 if i < len(thumb_imgs):
                                     thumb_src = await thumb_imgs[i].get_attribute("src")
-                                    # データロード遅延対策: data-src属性もチェック
                                     if not thumb_src:
                                         thumb_src = await thumb_imgs[i].get_attribute("data-src")
                                     
-                                    # 画像URLの調整 (サイズ変更など)
                                     if thumb_src and "?_ex=" in thumb_src:
                                          thumb_src = thumb_src.split("?_ex=")[0] + "?_ex=200x200"
 
@@ -124,7 +116,6 @@ async def run_fixed():
                     try:
                         print(f"   [{i+1}/{GET_LIMIT}] 分析中...")
                         
-                        # LPへ移動してスクショ
                         await page.goto(url, timeout=90000, wait_until="domcontentloaded")
                         
                         await page.evaluate("window.scrollTo(0, 0)")
@@ -142,7 +133,6 @@ async def run_fixed():
                         
                         await page.screenshot(path=img_path, type="jpeg", quality=50)
 
-                        # テキスト取得
                         title = await page.title()
                         content_text = await page.content()
                         page_height = await page.evaluate("document.body.scrollHeight")
@@ -169,7 +159,6 @@ async def run_fixed():
                                 sns_score += 1
                                 found_keywords.append(kw)
 
-                        # レビュー分析
                         review_summary = "なし"
                         review_keywords_list = []
                         if review_url:
@@ -187,7 +176,6 @@ async def run_fixed():
                             except:
                                 review_summary = "取得失敗"
 
-                        # 判定
                         prediction = "不明"
                         reason = ""
                         tag_color = "gray"
@@ -233,7 +221,6 @@ async def run_fixed():
         csv_filename = f"rakuten_lp_list_{today_str}.csv"
         df.to_csv(os.path.join(SAVE_DIR, csv_filename), index=False, encoding="utf-8-sig")
 
-        # HTML生成
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -364,7 +351,6 @@ async def run_fixed():
                     safe_cat_id = "".join(c for c in cat if c.isalnum())
                     item_id = f"{safe_cat_id}_{item['rank']}"
                     
-                    # 画像がない場合のプレースホルダー（灰色の四角）
                     thumb_src = item['thumb_url'] if item['thumb_url'] else "https://placehold.co/200x200?text=No+Img"
                     
                     html_content += f"""
@@ -375,7 +361,6 @@ async def run_fixed():
                     """
                 html_content += '</div></div>'
 
-                # LP詳細カードエリア
                 html_content += '<div class="gallery">'
                 for item in cat_items:
                     review_btn = ""
