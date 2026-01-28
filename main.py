@@ -419,7 +419,7 @@ async def run_fixed():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>楽天分析ツール ポータル</title>
+        <title>楽天分析ツール</title>
         <style>
             body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 40px; color: #333; display: flex; justify-content: center; align-items: center; min-height: 80vh; }}
             .container {{ text-align: center; max-width: 600px; width: 100%; }}
@@ -444,12 +444,12 @@ async def run_fixed():
     </head>
     <body>
         <div class="container">
-            <h1>🚀 楽天市場 分析ツール v2</h1>
+            <h1>楽天市場 分析ツール</h1>
             
             <div class="menu-grid">
                 <a href="{SAVE_DIR}/index.html" class="menu-card card-lp">
                     <div class="icon">📊</div>
-                    <div class="card-title">デイリーランキング画像</div>
+                    <div class="card-title">デイリーランキング収集サイト</div>
                     <div class="card-desc">毎日のランキング商品LPを画像で保存・一覧化</div>
                 </a>
 
