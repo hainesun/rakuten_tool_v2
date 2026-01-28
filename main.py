@@ -60,7 +60,7 @@ async def run_fixed():
         )
         
         context = await browser.new_context(
-            viewport={'width': 390, 'height': 15000}, 
+            viewport={'width': 390, 'height': 8000}, 
             device_scale_factor=2,
             user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         )
@@ -81,9 +81,11 @@ async def run_fixed():
                     try: await page.wait_for_selector("a[href*='item.rakuten.co.jp']", state="attached", timeout=30000)
                     except: continue
 
-                # ランキングページからリンクと画像を収集
-                all_links = await page.locator("div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
-                thumb_imgs = await page.locator("div.rnkRanking_after img").all()
+                # ★修正ポイント: 全順位共通の画像セレクタに変更 (div.rnkRanking_image img)
+                all_links = await page.locator("div.rnkRanking_image a[href*='item.rakuten.co.jp'], div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
+                
+                # サムネイル画像の取得方法を強化
+                thumb_imgs = await page.locator("div.rnkRanking_image img").all()
 
                 target_items = []
                 seen_items = set()
@@ -102,14 +104,18 @@ async def run_fixed():
                                 thumb_src = ""
                                 if i < len(thumb_imgs):
                                     thumb_src = await thumb_imgs[i].get_attribute("src")
-                                    # 小さい画像を少し大きく取得できる場合はURL調整（楽天の仕様によるが、基本はそのままでOK）
-                                    if "?_ex=" in thumb_src:
+                                    # データロード遅延対策: data-src属性もチェック
+                                    if not thumb_src:
+                                        thumb_src = await thumb_imgs[i].get_attribute("data-src")
+                                    
+                                    # 画像URLの調整 (サイズ変更など)
+                                    if thumb_src and "?_ex=" in thumb_src:
                                          thumb_src = thumb_src.split("?_ex=")[0] + "?_ex=200x200"
 
                                 target_items.append({"url": clean_url, "thumb": thumb_src})
                     except: continue
                 
-                print(f"   -> {len(target_items)}個の商品リンクを確保")
+                print(f"   -> {len(target_items)}個の商品リンク・画像を確保")
 
                 for i, item in enumerate(target_items):
                     url = item["url"]
@@ -246,7 +252,7 @@ async def run_fixed():
                     padding: 10px 15px; border-radius: 0 5px 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 }}
 
-                /* ★サムネイルマトリックス (グリッド表示) */
+                /* サムネイルマトリックス */
                 .thumb-matrix-container {{
                     background: white; padding: 20px; border-radius: 10px; margin-bottom: 40px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -266,13 +272,13 @@ async def run_fixed():
                     width: 100px; height: 100px; object-fit: cover; 
                     border-radius: 8px; border: 1px solid #ddd; 
                     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    background-color: #eee;
                 }}
                 .matrix-rank {{ 
                     margin-top: 5px; font-size: 14px; font-weight: bold; 
                     background: #bf0000; color: white; padding: 2px 8px; border-radius: 10px; 
                 }}
 
-                /* LP詳細カードエリア */
                 .gallery {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; }}
                 .card {{ background: white; width: 320px; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.2s; display: flex; flex-direction: column; scroll-margin-top: 20px; }}
                 .card:hover {{ transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }}
@@ -348,18 +354,18 @@ async def run_fixed():
             if len(cat_items) > 0:
                 html_content += f'<h2 class="cat-title">{cat}</h2>'
                 
-                # ★ここが新機能: サムネイル早見表エリア
+                # サムネイルマトリックスエリア
                 html_content += f"""
                 <div class="thumb-matrix-container">
                     <div class="matrix-title">🖼 {cat} サムネイル早見表 (1位〜{len(cat_items)}位)</div>
                     <div class="thumb-matrix">
                 """
                 for item in cat_items:
-                    # クリックすると下のLP詳細カードに飛ぶ
                     safe_cat_id = "".join(c for c in cat if c.isalnum())
                     item_id = f"{safe_cat_id}_{item['rank']}"
                     
-                    thumb_src = item['thumb_url'] if item['thumb_url'] else "https://via.placeholder.com/100x100?text=No+Img"
+                    # 画像がない場合のプレースホルダー（灰色の四角）
+                    thumb_src = item['thumb_url'] if item['thumb_url'] else "https://placehold.co/200x200?text=No+Img"
                     
                     html_content += f"""
                     <a href="#{item_id}" class="matrix-item">
@@ -378,7 +384,6 @@ async def run_fixed():
                     else:
                         review_btn = '<span style="flex:1; text-align:center; font-size:11px; padding:10px 0; color:#ccc;">(レビューなし)</span>'
                     
-                    # ページ内リンク用のID
                     safe_cat_id = "".join(c for c in cat if c.isalnum())
                     item_id = f"{safe_cat_id}_{item['rank']}"
 
