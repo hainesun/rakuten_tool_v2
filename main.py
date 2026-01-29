@@ -119,25 +119,22 @@ async def run_fixed():
                     thumb_url = item["thumb"]
                     
                     try:
-                        log(f"   [{i+1}/{GET_LIMIT}] 分析中... {item['title'][:10]}...")
+                        # ★ここを修正しました！（タイトルを表示しないように変更）
+                        log(f"   [{i+1}/{GET_LIMIT}] 分析中...")
                         
                         await page.goto(url, timeout=90000, wait_until="domcontentloaded")
                         
-                        # ★広告撃退ロジック強化
+                        # 広告撃退ロジック
                         try:
-                            # 楽天のオーバーレイ広告を閉じる
-                            # rbs-overlay-close, modal-closeなど様々なパターンに対応
                             close_btns = page.locator("button[class*='close'], div[class*='close'], .rbs-overlay-close, [aria-label='Close'], [aria-label='閉じる']")
                             if await close_btns.count() > 0:
                                 log("   ⚔️ 広告ポップアップを閉じます")
-                                # 見えているものだけクリック
                                 for btn in await close_btns.all():
                                     if await btn.is_visible():
                                         await btn.click()
                                         await page.wait_for_timeout(500)
                         except: pass
 
-                        # スクロールして画像を読み込ませる
                         await page.evaluate("window.scrollTo(0, 0)")
                         for _ in range(3):
                             await page.evaluate("window.scrollBy(0, 2500)")
@@ -151,7 +148,7 @@ async def run_fixed():
                         img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.jpg"
                         img_path = os.path.join(SAVE_DIR, img_filename)
                         
-                        # ★フルページ撮影
+                        # フルページ撮影
                         await page.screenshot(path=img_path, type="jpeg", quality=50, full_page=True)
 
                         title = await page.title()
@@ -301,21 +298,18 @@ async def run_fixed():
                 a.review-link {{ flex: 1; text-align: center; background: #ff9900; color: white; text-decoration: none; font-size: 11px; padding: 10px 0; border-radius: 6px; font-weight: bold; transition: opacity 0.2s; }}
                 a:hover {{ opacity: 0.8; }}
                 
-                /* ★ここが修正ポイント！モーダルをスマホ風＆スクロール可能に */
                 .modal {{ display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }}
-                
                 .modal-content-wrapper {{ 
                     position: relative; 
-                    margin: 30px auto; /* 上下に余白 */
+                    margin: 30px auto; 
                     width: 90%; 
-                    max-width: 450px; /* スマホ幅に制限 */
-                    height: 90vh; /* 画面の90%の高さ */
+                    max-width: 450px; 
+                    height: 90vh; 
                     background: white; 
                     border-radius: 12px; 
-                    overflow-y: auto; /* ★これで縦スクロールできます！ */
+                    overflow-y: auto; 
                     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
                 }}
-                
                 .modal-header {{ background: #fff; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }}
                 .close-btn {{ color: #333; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; background: #f0f0f0; width: 40px; height: 40px; border-radius: 50%; text-align: center; display: flex; align-items: center; justify-content: center; }}
                 .modal-img {{ width: 100%; display: block; }}
@@ -336,11 +330,11 @@ async def run_fixed():
                     document.getElementById("modalImg").src = imgSrc;
                     document.getElementById("modalTitle").innerText = title;
                     modal.style.display = "block";
-                    document.body.style.overflow = "hidden"; // 背景のスクロール停止
+                    document.body.style.overflow = "hidden";
                 }}
                 function closeModal() {{
                     document.getElementById("imageModal").style.display = "none";
-                    document.body.style.overflow = "auto"; // 背景のスクロール再開
+                    document.body.style.overflow = "auto";
                 }}
                 window.onclick = function(event) {{
                     if (event.target == document.getElementById("imageModal")) {{ closeModal(); }}
