@@ -17,8 +17,8 @@ TARGET_CATEGORIES = {
     "💄 美容・コスメ(デイリー)": "https://ranking.rakuten.co.jp/daily/100939/",
 }
 
-GET_LIMIT = 10      # サムネイルは10位まで取得
-LP_LIMIT = 5        # ★LP画像と詳細分析は5位まで！
+GET_LIMIT = 10      # 10位まで取得
+LP_LIMIT = 5        # 詳細分析・画像保存は5位まで
 SAVE_DIR = "lp_stock"
 REVIEW_DIR = "review_report"
 PAGE_PASSWORD = "1234" 
@@ -64,27 +64,32 @@ async def run_fixed():
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
-        # ハイブリッド設定 (PCのふりをしてスマホ幅で見る)
-        context = await browser.new_context(
-            viewport={'width': 390, 'height': 8000}, 
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        )
-        page = await context.new_page()
-        await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-
+        # PC用とスマホ用の設定を定義
+        pc_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        mobile_user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
+        
         for cat_name, cat_url in TARGET_CATEGORIES.items():
             log(f"\n🔍 【{cat_name}】 のランキングを取得中...")
+            
+            # ---------------------------------------------------------
+            # フェーズ1: PCのフリをしてランキング一覧を取得 (エラー回避のため)
+            # ---------------------------------------------------------
+            context_pc = await browser.new_context(
+                viewport={'width': 1280, 'height': 800}, 
+                user_agent=pc_user_agent
+            )
+            page_pc = await context_pc.new_page()
+            
+            target_items = []
             try:
-                await page.goto(cat_url, timeout=90000, wait_until="domcontentloaded")
-                await page.evaluate("window.scrollBy(0, 1000)")
-                await page.wait_for_timeout(2000)
+                await page_pc.goto(cat_url, timeout=90000, wait_until="domcontentloaded")
+                await page_pc.evaluate("window.scrollBy(0, 1000)")
+                await page_pc.wait_for_timeout(2000)
 
-                all_links = await page.locator("div.rnkRanking_image a[href*='item.rakuten.co.jp'], div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
-                thumb_imgs = await page.locator("div.rnkRanking_image img, div.rnkRanking_after img").all()
+                all_links = await page_pc.locator("div.rnkRanking_image a[href*='item.rakuten.co.jp'], div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
+                thumb_imgs = await page_pc.locator("div.rnkRanking_image img, div.rnkRanking_after img").all()
 
-                target_items = []
                 seen_items = set()
-                
                 for i, link in enumerate(all_links):
                     if len(target_items) >= GET_LIMIT: break
                     try:
@@ -105,148 +110,156 @@ async def run_fixed():
                 
                 if len(target_items) == 0:
                     log("   ⚠️ 商品が見つかりませんでした。")
-                    try: await page.screenshot(path="debug_error.jpg")
-                    except: pass
-                
-                log(f"   -> {len(target_items)}個の商品をリストアップ (上位{LP_LIMIT}位まで詳細分析)")
+            except Exception as e:
+                log(f"   ランキング取得エラー: {e}")
+            finally:
+                await context_pc.close() # PCモード終了
 
-                for i, item in enumerate(target_items):
-                    url = item["url"]
-                    thumb_url = item["thumb"]
-                    rank = i + 1
+            log(f"   -> {len(target_items)}個の商品をリストアップ。スマホモードで分析開始...")
+
+            # ---------------------------------------------------------
+            # フェーズ2: iPhoneのフリをして商品ページへ突撃 (完全スマホLP再現)
+            # ---------------------------------------------------------
+            context_mobile = await browser.new_context(
+                viewport={'width': 390, 'height': 8000}, 
+                user_agent=mobile_user_agent,
+                is_mobile=True, # これ重要！モバイルであることを宣言
+                has_touch=True
+            )
+            page_mobile = await context_mobile.new_page()
+
+            for i, item in enumerate(target_items):
+                url = item["url"]
+                thumb_url = item["thumb"]
+                rank = i + 1
+                is_full_analysis = rank <= LP_LIMIT
+
+                try:
+                    log(f"   [{rank}/{GET_LIMIT}] スマホでアクセス中...")
+                    await page_mobile.goto(url, timeout=90000, wait_until="domcontentloaded")
                     
-                    # ★ここが軽量化ポイント！
-                    is_full_analysis = rank <= LP_LIMIT # 5位以内ならTrue
+                    title = await page_mobile.title()
+                    
+                    img_filename = ""
+                    catch_copy = ""
+                    review_summary = ""
+                    review_url = ""
+                    prediction = "－"
+                    reason = ""
+                    tag_color = "#ccc"
 
-                    try:
-                        log(f"   [{rank}/{GET_LIMIT}] アクセス中...")
-                        await page.goto(url, timeout=90000, wait_until="domcontentloaded")
-                        
-                        # タイトルだけは全商品で取得（早見表のため）
-                        title = await page.title()
-                        
-                        img_filename = ""
-                        catch_copy = ""
-                        review_summary = ""
-                        review_url = ""
-                        prediction = "－"
-                        reason = ""
-                        tag_color = "#ccc"
-
-                        if is_full_analysis:
-                            # === 1位〜5位の場合：ガッツリ分析＆撮影 ===
-                            log("      📸 詳細分析と撮影を開始...")
-                            
-                            # 広告撃退
-                            try:
-                                close_btns = page.locator("button[class*='close'], div[class*='close'], .rbs-overlay-close, [aria-label='Close'], [aria-label='閉じる']")
-                                if await close_btns.count() > 0:
-                                    for btn in await close_btns.all():
+                    if is_full_analysis:
+                        # 広告撃退
+                        try:
+                            # モバイル特有のバナーも考慮
+                            close_selectors = [
+                                "button[class*='close']", "div[class*='close']", ".rbs-overlay-close", 
+                                "[aria-label='Close']", "[aria-label='閉じる']", 
+                                "#SC_DefaultClose", ".rt-edge-close" # モバイル用追加
+                            ]
+                            for sel in close_selectors:
+                                if await page_mobile.locator(sel).count() > 0:
+                                    for btn in await page_mobile.locator(sel).all():
                                         if await btn.is_visible():
                                             await btn.click()
-                                            await page.wait_for_timeout(500)
-                            except: pass
+                                            await page_mobile.wait_for_timeout(500)
+                        except: pass
 
-                            # スクロール
-                            await page.evaluate("window.scrollTo(0, 0)")
-                            for _ in range(3):
-                                await page.evaluate("window.scrollBy(0, 2500)")
-                                await page.wait_for_timeout(500)
-                            await page.evaluate("window.scrollTo(0, 0)")
-                            try: await page.wait_for_load_state("networkidle", timeout=3000)
-                            except: await page.wait_for_timeout(2000)
+                        # スクロール
+                        await page_mobile.evaluate("window.scrollTo(0, 0)")
+                        for _ in range(3):
+                            await page_mobile.evaluate("window.scrollBy(0, 2000)")
+                            await page_mobile.wait_for_timeout(500)
+                        await page_mobile.evaluate("window.scrollTo(0, 0)")
+                        try: await page_mobile.wait_for_load_state("networkidle", timeout=3000)
+                        except: await page_mobile.wait_for_timeout(2000)
 
-                            safe_cat_name = "".join(c for c in cat_name if c.isalnum())
-                            img_filename = f"{today_str}_{safe_cat_name}_rank{rank}.jpg"
-                            img_path = os.path.join(SAVE_DIR, img_filename)
-                            
-                            # フルページ撮影
-                            await page.screenshot(path=img_path, type="jpeg", quality=50, full_page=True)
-
-                            content_text = await page.content()
-                            page_height = await page.evaluate("document.body.scrollHeight")
-                            
-                            # キャッチコピー
-                            try:
-                                catch_loc = page.locator(".catch_copy, .item_catch_copy, [class*='catch']").first
-                                if await catch_loc.count() > 0:
-                                    txt = await catch_loc.text_content()
-                                    catch_copy = txt.strip()[:60] + "..."
-                            except: pass
-
-                            # SNS判定
-                            sns_score = 0
-                            found_keywords = []
-                            for kw in SNS_KEYWORDS:
-                                if kw in content_text:
-                                    sns_score += 1
-                                    found_keywords.append(kw)
-
-                            # レビュー
-                            try:
-                                review_link_loc = page.locator("a[href*='review.rakuten.co.jp']").first
-                                if await review_link_loc.count() > 0:
-                                    review_url = await review_link_loc.get_attribute("href")
-                            except: pass
-
-                            if review_url:
-                                try:
-                                    await page.goto(review_url, timeout=30000, wait_until="domcontentloaded")
-                                    review_text_all = await page.content()
-                                    review_keywords_list = []
-                                    for k in REVIEW_KEYWORDS:
-                                        if k in review_text_all:
-                                            review_keywords_list.append(k)
-                                    if review_keywords_list:
-                                        unique = list(set(review_keywords_list))
-                                        review_summary = " ".join(unique[:5])
-                                    else:
-                                        review_summary = "特徴なし"
-                                except:
-                                    review_summary = "取得失敗"
-                            else:
-                                review_summary = "なし"
-
-                            # 判定ロジック
-                            if sns_score >= 1:
-                                prediction = "SNS型"
-                                reason = f"KW:{','.join(found_keywords)}"
-                                tag_color = "#e1306c"
-                            elif page_height > 25000:
-                                prediction = "説得型LP"
-                                reason = f"長尺"
-                                tag_color = "#bf0000"
-                            else:
-                                prediction = "シンプル"
-                                reason = f"短尺"
-                                tag_color = "#555"
+                        safe_cat_name = "".join(c for c in cat_name if c.isalnum())
+                        img_filename = f"{today_str}_{safe_cat_name}_rank{rank}.jpg"
+                        img_path = os.path.join(SAVE_DIR, img_filename)
                         
+                        # フルページ撮影
+                        await page_mobile.screenshot(path=img_path, type="jpeg", quality=50, full_page=True)
+
+                        content_text = await page_mobile.content()
+                        page_height = await page_mobile.evaluate("document.body.scrollHeight")
+                        
+                        # キャッチコピー取得（モバイル対応）
+                        try:
+                            catch_loc = page_mobile.locator(".catch_copy, .item_catch_copy, [class*='catch']").first
+                            if await catch_loc.count() > 0:
+                                txt = await catch_loc.text_content()
+                                catch_copy = txt.strip()[:60] + "..."
+                        except: pass
+
+                        # SNS判定
+                        sns_score = 0
+                        found_keywords = []
+                        for kw in SNS_KEYWORDS:
+                            if kw in content_text:
+                                sns_score += 1
+                                found_keywords.append(kw)
+
+                        # レビューURL取得（モバイル対応）
+                        try:
+                            review_link_loc = page_mobile.locator("a[href*='review.rakuten.co.jp']").first
+                            if await review_link_loc.count() > 0:
+                                review_url = await review_link_loc.get_attribute("href")
+                        except: pass
+
+                        if review_url:
+                            try:
+                                await page_mobile.goto(review_url, timeout=30000, wait_until="domcontentloaded")
+                                review_text_all = await page_mobile.content()
+                                review_keywords_list = []
+                                for k in REVIEW_KEYWORDS:
+                                    if k in review_text_all:
+                                        review_keywords_list.append(k)
+                                if review_keywords_list:
+                                    unique = list(set(review_keywords_list))
+                                    review_summary = " ".join(unique[:5])
+                                else:
+                                    review_summary = "特徴なし"
+                            except:
+                                review_summary = "取得失敗"
                         else:
-                            # === 6位〜10位の場合：軽量モード ===
-                            log("      ⏩ 詳細分析をスキップします")
-                        
-                        all_data_list.append({
-                            "category": cat_name,
-                            "rank": rank,
-                            "title": title,
-                            "catch_copy": catch_copy,
-                            "review_url": review_url,
-                            "review_summary": review_summary,
-                            "type": prediction,
-                            "reason": reason,
-                            "url": url,
-                            "img": img_filename, # 6位以降は空文字
-                            "thumb_url": thumb_url,
-                            "color": tag_color,
-                            "is_full": is_full_analysis
-                        })
+                            review_summary = "なし"
 
-                    except Exception as e:
-                        log(f"   エラー: {e}")
-                        continue
-            except Exception as e:
-                log(f"   カテゴリーエラー: {e}")
-                continue
+                        # 判定ロジック
+                        if sns_score >= 1:
+                            prediction = "SNS型"
+                            reason = f"KW:{','.join(found_keywords)}"
+                            tag_color = "#e1306c"
+                        elif page_height > 20000: # モバイルはPCより縦長になりやすいので基準調整
+                            prediction = "説得型LP"
+                            reason = f"長尺"
+                            tag_color = "#bf0000"
+                        else:
+                            prediction = "シンプル"
+                            reason = f"短尺"
+                            tag_color = "#555"
+                    
+                    all_data_list.append({
+                        "category": cat_name,
+                        "rank": rank,
+                        "title": title,
+                        "catch_copy": catch_copy,
+                        "review_url": review_url,
+                        "review_summary": review_summary,
+                        "type": prediction,
+                        "reason": reason,
+                        "url": url,
+                        "img": img_filename,
+                        "thumb_url": thumb_url,
+                        "color": tag_color,
+                        "is_full": is_full_analysis
+                    })
+
+                except Exception as e:
+                    log(f"   商品分析エラー: {e}")
+                    continue
+            
+            await context_mobile.close() # カテゴリごとにコンテキストを閉じる
         
         await browser.close()
 
@@ -393,13 +406,11 @@ async def run_fixed():
                     thumb_src = item['thumb_url'] if item['thumb_url'] else "https://placehold.co/200x200?text=No+Img"
                     
                     if item['is_full']:
-                        # 5位以内ならページ内の詳細カードへリンク
                         safe_cat_id = "".join(c for c in cat if c.isalnum())
                         href = f"#{safe_cat_id}_{item['rank']}"
                         target = ""
                         ext_label = ""
                     else:
-                        # 6位以降なら楽天の商品ページへ直接リンク
                         href = item['url']
                         target = 'target="_blank"'
                         ext_label = '<span class="matrix-ext">楽天↗</span>'
@@ -416,7 +427,7 @@ async def run_fixed():
                 # 詳細カード (5位以内のみ表示)
                 html_content += '<div class="gallery">'
                 for item in cat_items:
-                    if not item['is_full']: continue # 6位以降はスキップ
+                    if not item['is_full']: continue
 
                     review_btn = ""
                     if item['review_url']:
