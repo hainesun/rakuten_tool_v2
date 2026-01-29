@@ -55,14 +55,14 @@ async def run_fixed():
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=False,
-            slow_mo=500,    
+            slow_mo=1000,   # 少しゆっくり動くように調整 
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
+        # ★修正: PC（デスクトップ）として振る舞う設定に変更
         context = await browser.new_context(
-            viewport={'width': 390, 'height': 8000}, 
-            device_scale_factor=2,
-            user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
+            viewport={'width': 1280, 'height': 800}, 
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
         page = await context.new_page()
         await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
@@ -72,14 +72,12 @@ async def run_fixed():
             try:
                 await page.goto(cat_url, timeout=90000, wait_until="domcontentloaded")
                 
-                # 画像を読み込ませるためのスクロール
+                # 画像読み込みのためのスクロール
                 await page.evaluate("window.scrollBy(0, 1000)")
-                await page.wait_for_timeout(1000)
+                await page.wait_for_timeout(2000)
 
                 # リンク取得
                 all_links = await page.locator("div.rnkRanking_image a[href*='item.rakuten.co.jp'], div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
-                
-                # ★修正ポイント: 上位(rnkRanking_image)と下位(rnkRanking_after)の両方の画像を取得
                 thumb_imgs = await page.locator("div.rnkRanking_image img, div.rnkRanking_after img").all()
 
                 target_items = []
@@ -94,18 +92,21 @@ async def run_fixed():
                             if clean_url not in seen_items:
                                 seen_items.add(clean_url)
                                 
-                                # サムネイルURLを取得
                                 thumb_src = ""
                                 if i < len(thumb_imgs):
                                     thumb_src = await thumb_imgs[i].get_attribute("src")
                                     if not thumb_src:
                                         thumb_src = await thumb_imgs[i].get_attribute("data-src")
-                                    
                                     if thumb_src and "?_ex=" in thumb_src:
                                          thumb_src = thumb_src.split("?_ex=")[0] + "?_ex=200x200"
 
                                 target_items.append({"url": clean_url, "thumb": thumb_src})
                     except: continue
+                
+                # ★デバッグ用: もし0件だったら証拠写真を撮る
+                if len(target_items) == 0:
+                    print("   ⚠️ 商品が見つかりませんでした。画面の状態を保存します: debug_error.jpg")
+                    await page.screenshot(path="debug_error.jpg")
                 
                 print(f"   -> {len(target_items)}個の商品リンク・画像を確保")
 
@@ -239,7 +240,6 @@ async def run_fixed():
                     padding: 10px 15px; border-radius: 0 5px 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 }}
 
-                /* サムネイルマトリックス */
                 .thumb-matrix-container {{
                     background: white; padding: 20px; border-radius: 10px; margin-bottom: 40px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -341,7 +341,6 @@ async def run_fixed():
             if len(cat_items) > 0:
                 html_content += f'<h2 class="cat-title">{cat}</h2>'
                 
-                # サムネイルマトリックスエリア
                 html_content += f"""
                 <div class="thumb-matrix-container">
                     <div class="matrix-title">🖼 {cat} サムネイル早見表 (1位〜{len(cat_items)}位)</div>
@@ -400,7 +399,6 @@ async def run_fixed():
             f.write(html_content)
         print(f"\n✨ レポート作成完了: {report_filename}")
 
-        # --- アーカイブページ生成 ---
         report_files = glob.glob(os.path.join(SAVE_DIR, "report_*.html"))
         report_files.sort(reverse=True)
         
