@@ -6,6 +6,7 @@ import datetime
 import glob
 import re
 import random
+import sys
 
 # --- 🛠 設定エリア (デイリー版) 🛠 ---
 TARGET_CATEGORIES = {
@@ -32,6 +33,10 @@ REVIEW_KEYWORDS = [
 ]
 SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフルエンサー", "見て購入", "紹介"]
 
+# ログ表示関数
+def log(text):
+    print(text, flush=True)
+
 async def run_fixed():
     if not os.path.exists(SAVE_DIR):
         os.makedirs(SAVE_DIR)
@@ -55,28 +60,27 @@ async def run_fixed():
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=False,
-            slow_mo=1000,   # 少しゆっくり動くように調整 
+            slow_mo=500,    
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
-        # ★修正: PC（デスクトップ）として振る舞う設定に変更
+        # ハイブリッド設定 (PCのふりをしてスマホ幅で見る)
         context = await browser.new_context(
-            viewport={'width': 1280, 'height': 800}, 
+            viewport={'width': 390, 'height': 8000}, 
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
         page = await context.new_page()
         await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
         for cat_name, cat_url in TARGET_CATEGORIES.items():
-            print(f"\n🔍 【{cat_name}】 のランキングを取得中...")
+            log(f"\n🔍 【{cat_name}】 のランキングを取得中...")
             try:
                 await page.goto(cat_url, timeout=90000, wait_until="domcontentloaded")
                 
-                # 画像読み込みのためのスクロール
                 await page.evaluate("window.scrollBy(0, 1000)")
                 await page.wait_for_timeout(2000)
 
-                # リンク取得
+                # PCサイトの構造からリンク取得
                 all_links = await page.locator("div.rnkRanking_image a[href*='item.rakuten.co.jp'], div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
                 thumb_imgs = await page.locator("div.rnkRanking_image img, div.rnkRanking_after img").all()
 
@@ -103,22 +107,37 @@ async def run_fixed():
                                 target_items.append({"url": clean_url, "thumb": thumb_src})
                     except: continue
                 
-                # ★デバッグ用: もし0件だったら証拠写真を撮る
                 if len(target_items) == 0:
-                    print("   ⚠️ 商品が見つかりませんでした。画面の状態を保存します: debug_error.jpg")
-                    await page.screenshot(path="debug_error.jpg")
+                    log("   ⚠️ 商品が見つかりませんでした。debug_error.jpgを保存")
+                    try: await page.screenshot(path="debug_error.jpg")
+                    except: pass
                 
-                print(f"   -> {len(target_items)}個の商品リンク・画像を確保")
+                log(f"   -> {len(target_items)}個の商品リンク・画像を確保")
 
                 for i, item in enumerate(target_items):
                     url = item["url"]
                     thumb_url = item["thumb"]
                     
                     try:
-                        print(f"   [{i+1}/{GET_LIMIT}] 分析中...")
+                        log(f"   [{i+1}/{GET_LIMIT}] 分析中... {item['title'][:10]}...")
                         
                         await page.goto(url, timeout=90000, wait_until="domcontentloaded")
                         
+                        # ★広告撃退ロジック強化
+                        try:
+                            # 楽天のオーバーレイ広告を閉じる
+                            # rbs-overlay-close, modal-closeなど様々なパターンに対応
+                            close_btns = page.locator("button[class*='close'], div[class*='close'], .rbs-overlay-close, [aria-label='Close'], [aria-label='閉じる']")
+                            if await close_btns.count() > 0:
+                                log("   ⚔️ 広告ポップアップを閉じます")
+                                # 見えているものだけクリック
+                                for btn in await close_btns.all():
+                                    if await btn.is_visible():
+                                        await btn.click()
+                                        await page.wait_for_timeout(500)
+                        except: pass
+
+                        # スクロールして画像を読み込ませる
                         await page.evaluate("window.scrollTo(0, 0)")
                         for _ in range(3):
                             await page.evaluate("window.scrollBy(0, 2500)")
@@ -132,7 +151,8 @@ async def run_fixed():
                         img_filename = f"{today_str}_{safe_cat_name}_rank{i+1}.jpg"
                         img_path = os.path.join(SAVE_DIR, img_filename)
                         
-                        await page.screenshot(path=img_path, type="jpeg", quality=50)
+                        # ★フルページ撮影
+                        await page.screenshot(path=img_path, type="jpeg", quality=50, full_page=True)
 
                         title = await page.title()
                         content_text = await page.content()
@@ -209,10 +229,10 @@ async def run_fixed():
                         })
 
                     except Exception as e:
-                        print(f"   エラー: {e}")
+                        log(f"   エラー: {e}")
                         continue
             except Exception as e:
-                print(f"   カテゴリーエラー: {e}")
+                log(f"   カテゴリーエラー: {e}")
                 continue
         
         await browser.close()
@@ -222,6 +242,7 @@ async def run_fixed():
         csv_filename = f"rakuten_lp_list_{today_str}.csv"
         df.to_csv(os.path.join(SAVE_DIR, csv_filename), index=False, encoding="utf-8-sig")
 
+        # HTML生成
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -233,13 +254,11 @@ async def run_fixed():
                 body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 20px; display: none; color: #333; }}
                 h1 {{ text-align: center; margin-bottom: 30px; }}
                 .nav-link {{ display:block; text-align:center; margin-bottom:20px; font-weight:bold; color:#003366; }}
-                
                 h2.cat-title {{ 
                     margin-top: 50px; margin-bottom: 20px; padding-left: 15px; 
                     border-left: 5px solid #bf0000; font-size: 24px; background: #fff;
                     padding: 10px 15px; border-radius: 0 5px 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 }}
-
                 .thumb-matrix-container {{
                     background: white; padding: 20px; border-radius: 10px; margin-bottom: 40px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -265,15 +284,12 @@ async def run_fixed():
                     margin-top: 5px; font-size: 14px; font-weight: bold; 
                     background: #bf0000; color: white; padding: 2px 8px; border-radius: 10px; 
                 }}
-
                 .gallery {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; }}
                 .card {{ background: white; width: 320px; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.2s; display: flex; flex-direction: column; scroll-margin-top: 20px; }}
                 .card:hover {{ transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }}
                 .tag {{ display: inline-block; padding: 4px 12px; border-radius: 20px; color: white; font-size: 11px; font-weight: bold; margin-bottom: 10px; align-self: flex-start; }}
-                
                 .rank-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }}
                 .rank-num {{ font-size: 16px; font-weight: bold; color: #333; }}
-
                 .thumb-wrapper {{ cursor: zoom-in; overflow: hidden; border-radius: 6px; border: 1px solid #eee; height: 350px; position: relative; }}
                 .thumb {{ width: 100%; height: 100%; object-fit: cover; object-position: top; transition: opacity 0.3s; }}
                 .thumb:hover {{ opacity: 0.8; }}
@@ -284,8 +300,22 @@ async def run_fixed():
                 a.link {{ flex: 1; text-align: center; background: #333; color: white; text-decoration: none; font-size: 11px; padding: 10px 0; border-radius: 6px; font-weight: bold; transition: opacity 0.2s; }}
                 a.review-link {{ flex: 1; text-align: center; background: #ff9900; color: white; text-decoration: none; font-size: 11px; padding: 10px 0; border-radius: 6px; font-weight: bold; transition: opacity 0.2s; }}
                 a:hover {{ opacity: 0.8; }}
-                .modal {{ display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }}
-                .modal-content-wrapper {{ position: relative; margin: 20px auto; width: 95%; max-width: 600px; background: white; border-radius: 8px; overflow: hidden; }}
+                
+                /* ★ここが修正ポイント！モーダルをスマホ風＆スクロール可能に */
+                .modal {{ display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }}
+                
+                .modal-content-wrapper {{ 
+                    position: relative; 
+                    margin: 30px auto; /* 上下に余白 */
+                    width: 90%; 
+                    max-width: 450px; /* スマホ幅に制限 */
+                    height: 90vh; /* 画面の90%の高さ */
+                    background: white; 
+                    border-radius: 12px; 
+                    overflow-y: auto; /* ★これで縦スクロールできます！ */
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                }}
+                
                 .modal-header {{ background: #fff; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }}
                 .close-btn {{ color: #333; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; background: #f0f0f0; width: 40px; height: 40px; border-radius: 50%; text-align: center; display: flex; align-items: center; justify-content: center; }}
                 .modal-img {{ width: 100%; display: block; }}
@@ -306,11 +336,11 @@ async def run_fixed():
                     document.getElementById("modalImg").src = imgSrc;
                     document.getElementById("modalTitle").innerText = title;
                     modal.style.display = "block";
-                    document.body.style.overflow = "hidden";
+                    document.body.style.overflow = "hidden"; // 背景のスクロール停止
                 }}
                 function closeModal() {{
                     document.getElementById("imageModal").style.display = "none";
-                    document.body.style.overflow = "auto";
+                    document.body.style.overflow = "auto"; // 背景のスクロール再開
                 }}
                 window.onclick = function(event) {{
                     if (event.target == document.getElementById("imageModal")) {{ closeModal(); }}
@@ -349,9 +379,7 @@ async def run_fixed():
                 for item in cat_items:
                     safe_cat_id = "".join(c for c in cat if c.isalnum())
                     item_id = f"{safe_cat_id}_{item['rank']}"
-                    
                     thumb_src = item['thumb_url'] if item['thumb_url'] else "https://placehold.co/200x200?text=No+Img"
-                    
                     html_content += f"""
                     <a href="#{item_id}" class="matrix-item">
                         <img src="{thumb_src}" class="matrix-img">
@@ -367,10 +395,8 @@ async def run_fixed():
                         review_btn = f'<a href="{item["review_url"]}" target="_blank" class="review-link">⭐️ レビュー</a>'
                     else:
                         review_btn = '<span style="flex:1; text-align:center; font-size:11px; padding:10px 0; color:#ccc;">(レビューなし)</span>'
-                    
                     safe_cat_id = "".join(c for c in cat if c.isalnum())
                     item_id = f"{safe_cat_id}_{item['rank']}"
-
                     html_content += f"""
                         <div class="card" id="{item_id}">
                             <span class="tag" style="background: {item['color']}">{item['type']}</span>
@@ -382,9 +408,7 @@ async def run_fixed():
                             </div>
                             <div class="catch-copy">{item['catch_copy']}</div>
                             <div class="title">{item['title'][:35]}...</div>
-                            
                             <div class="review-box">💬 口コミ: {item['review_summary']}</div>
-                            
                             <div class="btn-area">
                                 <a href="{item['url']}" target="_blank" class="link">商品ページ</a>
                                 {review_btn}
@@ -397,7 +421,7 @@ async def run_fixed():
         report_filename = f"report_{today_str}.html"
         with open(os.path.join(SAVE_DIR, report_filename), "w", encoding="utf-8") as f:
             f.write(html_content)
-        print(f"\n✨ レポート作成完了: {report_filename}")
+        log(f"\n✨ レポート作成完了: {report_filename}")
 
         report_files = glob.glob(os.path.join(SAVE_DIR, "report_*.html"))
         report_files.sort(reverse=True)
@@ -443,10 +467,10 @@ async def run_fixed():
         
         with open(os.path.join(SAVE_DIR, "index.html"), "w", encoding="utf-8") as f:
             f.write(index_html)
-        print("✅ アーカイブページ更新完了")
+        log("✅ アーカイブページ更新完了")
 
     else:
-        print("\n❌ データが取れませんでした")
+        log("\n❌ データが取れませんでした")
 
     # --- 総合トップページ (index.html) ---
     top_html = f"""
@@ -504,7 +528,7 @@ async def run_fixed():
     
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(top_html)
-    print("✅ 総合トップページ生成完了 (index.html)")
+    log("✅ 総合トップページ生成完了 (index.html)")
 
 if __name__ == "__main__":
     asyncio.run(run_fixed())
