@@ -36,7 +36,7 @@ SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフル�
 def log(text):
     print(text, flush=True)
 
-# ★追加機能: レビューレポート作成
+# --- レビューレポート作成関数 ---
 def create_review_report(all_data, date_str):
     if not os.path.exists(REVIEW_DIR):
         os.makedirs(REVIEW_DIR)
@@ -52,21 +52,25 @@ def create_review_report(all_data, date_str):
         <style>
             body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f4f7f6; padding: 20px; color: #333; }}
             h1 {{ text-align: center; color: #003366; }}
-            .nav-link {{ display:block; text-align:center; margin-bottom:20px; font-weight:bold; color:#003366; }}
+            .nav-area {{ text-align: center; margin-bottom: 30px; }}
+            .nav-btn {{ display: inline-block; margin: 5px; padding: 10px 20px; background: #fff; color: #003366; text-decoration: none; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; }}
+            .nav-btn:hover {{ transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.15); }}
+            
             .container {{ max-width: 800px; margin: 0 auto; }}
-            .item-box {{ background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
-            .cat-name {{ font-size: 12px; color: #666; background: #eee; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 5px; }}
-            .item-title {{ font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #333; line-height: 1.4; }}
-            .review-tag {{ display: inline-block; background: #eef9ff; color: #0056b3; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; }}
-            .link-btn {{ display: inline-block; margin-top: 10px; text-decoration: none; color: white; background: #ff9900; padding: 8px 20px; border-radius: 4px; font-size: 12px; font-weight: bold; }}
-            .reason-box {{ font-size:12px; color:#555; background:#fafafa; padding:10px; border-radius:4px; margin-top:10px; }}
+            .item-box {{ background: white; padding: 25px; margin-bottom: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }}
+            .cat-name {{ font-size: 12px; color: #666; background: #eee; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; }}
+            .item-title {{ font-weight: bold; font-size: 16px; margin-bottom: 12px; color: #333; line-height: 1.5; }}
+            .review-tag {{ display: inline-block; background: #eef9ff; color: #0056b3; padding: 5px 10px; border-radius: 15px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; border: 1px solid #cceeff; }}
+            .link-btn {{ display: inline-block; margin-top: 15px; text-decoration: none; color: white; background: #ff9900; padding: 8px 25px; border-radius: 5px; font-size: 13px; font-weight: bold; transition: opacity 0.2s; }}
+            .link-btn:hover {{ opacity: 0.8; }}
+            .reason-box {{ font-size:13px; color:#555; background:#fafafa; padding:15px; border-radius:8px; margin-top:15px; border-left: 4px solid #003366; }}
         </style>
     </head>
     <body>
         <h1>🧐 レビュー深掘り分析 ({date_str})</h1>
-        <div style="text-align:center; margin-bottom:20px;">
-            <a href="../index.html" class="nav-link">🏠 ホームに戻る</a>
-            <a href="index.html" style="color:#666;">← 過去一覧に戻る</a>
+        <div class="nav-area">
+            <a href="../index.html" class="nav-btn">🏠 ホームに戻る</a>
+            <a href="index.html" class="nav-btn">📂 過去の日付一覧に戻る</a>
         </div>
         <div class="container">
     """
@@ -87,11 +91,11 @@ def create_review_report(all_data, date_str):
             <div class="cat-name">{item['category']} {item['rank']}位</div>
             <div class="item-title">{item['title']}</div>
             <div style="margin:10px 0;">
-                <strong>抽出キーワード:</strong><br>
+                <div style="font-size:12px; font-weight:bold; margin-bottom:5px; color:#666;">抽出キーワード</div>
                 {keywords_html}
             </div>
             <div class="reason-box">
-                💡 分析メモ: {item['reason']}
+                💡 <b>AI分析メモ:</b><br>{item['reason']}
             </div>
             {f'<div style="text-align:right;"><a href="{item["review_url"]}" target="_blank" class="link-btn">実際のレビューを見る</a></div>' if item['review_url'] else ''}
         </div>
@@ -106,19 +110,54 @@ def create_review_report(all_data, date_str):
     with open(os.path.join(REVIEW_DIR, f"report_{date_str}.html"), "w", encoding="utf-8") as f:
         f.write(html)
     
-    # レビューのインデックスページ更新
+    # レビューのアーカイブページ (index.html)
     files = glob.glob(os.path.join(REVIEW_DIR, "report_*.html"))
     files.sort(reverse=True)
-    index_html = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>レビュー分析アーカイブ</title><style>body{font-family:sans-serif;padding:20px;background:#f4f7f6;} .container{max-width:600px;margin:0 auto;background:white;padding:20px;border-radius:8px;} a{display:block;padding:15px;border-bottom:1px solid #eee;text-decoration:none;color:#333;font-weight:bold;} a:hover{background:#f9f9f9;}</style></head><body><div class="container"><h1 style="text-align:center;color:#003366;">🧐 レビュー分析アーカイブ</h1><div style="text-align:center;margin-bottom:20px;"><a href="../index.html" style="display:inline;border:none;background:#ddd;padding:5px 10px;border-radius:4px;">🏠 ホームに戻る</a></div>"""
+    
+    index_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="robots" content="noindex">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <title>レビュー分析アーカイブ</title>
+        <style>
+            body { font-family: "Helvetica Neue", Arial, sans-serif; padding: 20px; background: #f4f7f6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; }
+            h1 { text-align: center; color: #003366; margin-bottom: 30px; }
+            .home-btn { display: block; width: fit-content; margin: 0 auto 30px; padding: 10px 20px; background: #fff; color: #333; text-decoration: none; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            .list-group { list-style: none; padding: 0; }
+            .list-item { margin-bottom: 15px; }
+            .report-link { display: block; padding: 20px; background: #fff; border-radius: 10px; text-decoration: none; color: #333; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border-left: 6px solid #003366; }
+            .report-link:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+            .date-text { font-size: 18px; }
+            .arrow { float: right; color: #ccc; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🧐 レビュー分析アーカイブ</h1>
+            <a href="../index.html" class="home-btn">🏠 ホームに戻る</a>
+            <ul class="list-group">
+    """
     for p in files:
         fname = os.path.basename(p)
         d_str = fname.replace("report_", "").replace(".html", "")
-        index_html += f'<a href="{fname}">📂 {d_str} の分析レポート</a>'
-    index_html += "</div></body></html>"
+        index_html += f"""
+            <li class="list-item">
+                <a href="{fname}" class="report-link">
+                    <span class="date-text">📂 {d_str} の分析レポート</span>
+                    <span class="arrow">→</span>
+                </a>
+            </li>
+        """
+    index_html += "</ul></div></body></html>"
     
     with open(os.path.join(REVIEW_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(index_html)
 
+# --- メイン処理 ---
 async def run_fixed():
     if not os.path.exists(SAVE_DIR): os.makedirs(SAVE_DIR)
     if not os.path.exists(REVIEW_DIR): os.makedirs(REVIEW_DIR)
@@ -149,7 +188,7 @@ async def run_fixed():
         for cat_name, cat_url in TARGET_CATEGORIES.items():
             log(f"\n🔍 【{cat_name}】...")
             
-            # --- Phase 1: PCモードでリスト取得 ---
+            # Phase 1: PCモード
             context_pc = await browser.new_context(viewport={'width': 1280, 'height': 800}, user_agent=pc_ua)
             page_pc = await context_pc.new_page()
             target_items = []
@@ -176,14 +215,12 @@ async def run_fixed():
                                     if t_src and "?_ex=" in t_src: t_src = t_src.split("?_ex=")[0] + "?_ex=200x200"
                                 target_items.append({"url": clean, "thumb": t_src})
                     except: continue
-                if not target_items:
-                    log("   ⚠️ 商品が見つかりませんでした (PCモード)")
             except Exception as e:
                 log(f"   取得失敗: {e}")
             finally:
                 await context_pc.close()
 
-            # --- Phase 2: スマホモードで詳細取得 ---
+            # Phase 2: スマホモード
             context_mo = await browser.new_context(viewport={'width': 390, 'height': 8000}, user_agent=mobile_ua, is_mobile=True, has_touch=True)
             page_mo = await context_mo.new_page()
             
@@ -222,12 +259,10 @@ async def run_fixed():
                         await page_mo.screenshot(path=os.path.join(SAVE_DIR, img_name), type="jpeg", quality=50, full_page=True)
                         res['img'] = img_name
 
-                        # 解析
                         content = await page_mo.content()
                         res['type'] = "SNS型" if any(k in content for k in SNS_KEYWORDS) else "シンプル"
                         res['color'] = "#e1306c" if res['type'] == "SNS型" else "#555"
                         
-                        # レビュー
                         try:
                             rev_link = page_mo.locator("a[href*='review.rakuten.co.jp']").first
                             if await rev_link.count() > 0:
@@ -251,34 +286,65 @@ async def run_fixed():
         await browser.close()
 
     if all_data_list:
-        # CSV保存
         df = pd.DataFrame(all_data_list)
         df.to_csv(os.path.join(SAVE_DIR, f"rakuten_lp_list_{today_str}.csv"), index=False, encoding="utf-8-sig")
         
-        # ★レビューレポート生成を実行
+        # ★レビューレポート生成
         create_review_report(all_data_list, today_str)
-        log(f"✨ レビュー分析レポート作成完了: {today_str}")
 
         # LP HTML生成
-        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>楽天LP分析 ({today_str})</title>
-        <style>
-            body{{font-family:sans-serif;background:#f0f2f5;padding:20px;color:#333;}} h1{{text-align:center;}} .nav-link{{display:block;text-align:center;margin-bottom:20px;font-weight:bold;color:#003366;}}
-            .thumb-matrix{{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;background:white;padding:15px;border-radius:10px;margin-bottom:30px;}}
-            .matrix-item{{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:#333;font-size:12px;position:relative;}}
-            .matrix-img{{width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid #ddd;}}
-            .matrix-ext{{position:absolute;top:0;right:0;background:#333;color:white;font-size:9px;padding:2px 4px;opacity:0.8;}}
-            .gallery{{display:flex;flex-wrap:wrap;gap:20px;}}
-            .card{{background:white;width:320px;padding:15px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1);}}
-            .thumb-wrapper{{height:350px;overflow:hidden;border:1px solid #eee;cursor:pointer;}} .thumb{{width:100%;transition:opacity 0.3s;}} .thumb:hover{{opacity:0.8;}}
-            .modal{{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:999;backdrop-filter:blur(5px);}}
-            .modal-content{{position:relative;margin:30px auto;width:90%;max-width:450px;height:90vh;background:white;overflow-y:auto;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,0.5);}}
-            .close{{position:sticky;top:0;right:0;background:#fff;padding:15px;text-align:right;font-size:24px;cursor:pointer;border-bottom:1px solid #eee;z-index:100;}}
-        </style>
-        <script>
-            function openModal(src){{document.getElementById('mImg').src=src;document.getElementById('modal').style.display='block';document.body.style.overflow='hidden';}}
-            function closeModal(){{document.getElementById('modal').style.display='none';document.body.style.overflow='auto';}}
-        </script></head><body><h1>📅 LP分析 ({today_str})</h1><a href="../index.html" class="nav-link">🏠 ホームに戻る</a>
-        <div id="modal" class="modal" onclick="closeModal()"><div class="modal-content" onclick="event.stopPropagation()"><div class="close" onclick="closeModal()">×</div><img id="mImg" style="width:100%;"></div></div>
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="robots" content="noindex, nofollow">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>楽天LP分析 ({today_str})</title>
+            <style>
+                body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }}
+                h1 {{ text-align: center; margin-bottom: 20px; }}
+                
+                /* ナビゲーションボタン */
+                .nav-area {{ text-align: center; margin-bottom: 30px; }}
+                .nav-btn {{ display: inline-block; margin: 5px; padding: 10px 20px; background: #fff; color: #bf0000; text-decoration: none; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; }}
+                .nav-btn:hover {{ transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.15); }}
+                
+                .thumb-matrix {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; background: white; padding: 15px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }}
+                .matrix-item {{ display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #333; font-size: 12px; position: relative; transition: transform 0.2s; }}
+                .matrix-item:hover {{ transform: scale(1.05); }}
+                .matrix-img {{ width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }}
+                .matrix-ext {{ position: absolute; top: 0; right: 0; background: #333; color: white; font-size: 9px; padding: 2px 4px; opacity: 0.8; border-radius: 0 8px 0 4px; }}
+                
+                .gallery {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; }}
+                .card {{ background: white; width: 320px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; }}
+                .rank-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }}
+                .thumb-wrapper {{ height: 350px; overflow: hidden; border: 1px solid #eee; cursor: zoom-in; border-radius: 6px; }}
+                .thumb {{ width: 100%; transition: opacity 0.3s; }}
+                .thumb:hover {{ opacity: 0.8; }}
+                
+                .modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; backdrop-filter: blur(5px); }}
+                .modal-content {{ position: relative; margin: 30px auto; width: 90%; max-width: 450px; height: 90vh; background: white; overflow-y: auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }}
+                .close {{ position: sticky; top: 0; right: 0; background: #fff; padding: 15px; text-align: right; font-size: 24px; cursor: pointer; border-bottom: 1px solid #eee; z-index: 100; }}
+            </style>
+            <script>
+                function openModal(src){{document.getElementById('mImg').src=src;document.getElementById('modal').style.display='block';document.body.style.overflow='hidden';}}
+                function closeModal(){{document.getElementById('modal').style.display='none';document.body.style.overflow='auto';}}
+            </script>
+        </head>
+        <body>
+            <h1>📅 LP分析 ({today_str})</h1>
+            <div class="nav-area">
+                <a href="../index.html" class="nav-btn">🏠 ホームに戻る</a>
+                <a href="index.html" class="nav-btn">📂 過去の日付一覧に戻る</a>
+            </div>
+            
+            <div id="modal" class="modal" onclick="closeModal()">
+                <div class="modal-content" onclick="event.stopPropagation()">
+                    <div class="close" onclick="closeModal()">×</div>
+                    <img id="mImg" style="width:100%;">
+                </div>
+            </div>
         """
         
         for cat in TARGET_CATEGORIES.keys():
@@ -294,22 +360,72 @@ async def run_fixed():
             for it in items:
                 if not it['is_full']: continue
                 rid = "".join(c for c in cat if c.isalnum()) + f"_{it['rank']}"
-                html += f"""<div class="card" id="{rid}"><div class="rank-header"><strong>{it['rank']}位</strong> <span style="background:{it['color']};color:white;padding:2px 6px;border-radius:4px;font-size:10px;">{it['type']}</span></div>
-                <div class="thumb-wrapper" onclick="openModal('{it['img']}')"><img src="{it['img']}" class="thumb"></div>
-                <div style="font-size:12px;margin:10px 0;"><b>{it['title'][:30]}...</b></div>
-                <div style="background:#f0f8ff;padding:5px;font-size:11px;color:#0056b3;">💬 {it['review_summary']}</div>
-                <div style="display:flex;gap:5px;margin-top:10px;"><a href="{it['url']}" target="_blank" style="flex:1;text-align:center;background:#333;color:white;padding:8px 0;border-radius:4px;text-decoration:none;font-size:11px;">商品へ</a>
-                {f'<a href="{it["review_url"]}" target="_blank" style="flex:1;text-align:center;background:#f90;color:white;padding:8px 0;border-radius:4px;text-decoration:none;font-size:11px;">レビュー</a>' if it['review_url'] else ''}</div></div>"""
+                html += f"""
+                <div class="card" id="{rid}">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">{it['rank']}位</strong>
+                        <span style="background:{it['color']};color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">{it['type']}</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('{it['img']}')">
+                        <img src="{it['img']}" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">{it['title'][:40]}...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 {it['review_summary']}
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="{it['url']}" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        {f'<a href="{it["review_url"]}" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>' if it['review_url'] else ''}
+                    </div>
+                </div>"""
             html += "</div>"
         html += "</body></html>"
         
         with open(os.path.join(SAVE_DIR, f"report_{today_str}.html"), "w", encoding="utf-8") as f: f.write(html)
         
-        # LPアーカイブ更新
-        idx = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>LPアーカイブ</title><style>body{font-family:sans-serif;padding:20px;background:#f4f7f6;} .container{max-width:600px;margin:0 auto;background:white;padding:20px;border-radius:8px;} a{display:block;padding:10px;border-bottom:1px solid #eee;text-decoration:none;color:#333;} a:hover{background:#f9f9f9;}</style></head><body><div class="container"><h1 style="text-align:center;color:#bf0000;">📚 LPアーカイブ</h1><div style="text-align:center;margin-bottom:20px;"><a href="../index.html" style="display:inline;border:none;background:#ddd;padding:5px 10px;border-radius:4px;">🏠 ホームに戻る</a></div>"""
-        for p in sorted(glob.glob(os.path.join(SAVE_DIR, "report_*.html")), reverse=True):
-            idx += f'<a href="{os.path.basename(p)}">📂 {os.path.basename(p).replace("report_","").replace(".html","")} のレポート</a>'
-        idx += "</div></body></html>"
+        # LPアーカイブ一覧 (index.html) のデザイン復活
+        files = glob.glob(os.path.join(SAVE_DIR, "report_*.html"))
+        files.sort(reverse=True)
+        
+        idx = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="robots" content="noindex">
+            <meta name="viewport" content="width=device-width,initial-scale=1.0">
+            <title>LPアーカイブ</title>
+            <style>
+                body { font-family: "Helvetica Neue", Arial, sans-serif; padding: 20px; background: #f4f7f6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; }
+                h1 { text-align: center; color: #bf0000; margin-bottom: 30px; }
+                .home-btn { display: block; width: fit-content; margin: 0 auto 30px; padding: 10px 20px; background: #fff; color: #333; text-decoration: none; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+                .list-group { list-style: none; padding: 0; }
+                .list-item { margin-bottom: 15px; }
+                .report-link { display: block; padding: 20px; background: #fff; border-radius: 10px; text-decoration: none; color: #333; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; border-left: 6px solid #bf0000; }
+                .report-link:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+                .date-text { font-size: 18px; }
+                .arrow { float: right; color: #ccc; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📚 LPアーカイブ</h1>
+                <a href="../index.html" class="home-btn">🏠 ホームに戻る</a>
+                <ul class="list-group">
+        """
+        for p in files:
+            fname = os.path.basename(p)
+            d_str = fname.replace("report_", "").replace(".html", "")
+            idx += f"""
+                <li class="list-item">
+                    <a href="{fname}" class="report-link">
+                        <span class="date-text">📂 {d_str} のレポート</span>
+                        <span class="arrow">→</span>
+                    </a>
+                </li>
+            """
+        idx += "</ul></div></body></html>"
         with open(os.path.join(SAVE_DIR, "index.html"), "w", encoding="utf-8") as f: f.write(idx)
 
     # 総合トップページ更新 (index.html)

@@ -2,9 +2,9 @@ name: デイリーランキングスクレイプ
 
 on:
   schedule:
-    # 毎日 朝7:00 (JST) = 前日 22:00 (UTC)
+    # 日本時間 朝7:00 (UTC 22:00)
     - cron: '0 22 * * *'
-  workflow_dispatch: # 手動実行用
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -21,22 +21,20 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: 必要なライブラリと日本語フォントのインストール
+      - name: 環境構築 (日本語フォント入り)
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb
-          # ★ここが追加ポイント: 日本語フォントを入れる魔法
-          sudo apt-get install -y fonts-ipafont fonts-ipaexfont fonts-noto-cjk
+          sudo apt-get install -y xvfb fonts-ipafont fonts-ipaexfont fonts-noto-cjk
           pip install pandas playwright
           playwright install chromium
 
-      - name: ランキングスクレイピング実行
+      - name: スクリプト実行
         run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" python main.py
 
-      - name: 結果を保存して更新
+      - name: 結果を保存
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "🤖 Auto update ranking with fonts" || echo "No changes to commit"
+          git commit -m "🤖 Auto update (LP & Review)" || echo "No changes to commit"
           git push
