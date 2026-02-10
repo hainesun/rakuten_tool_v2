@@ -21,7 +21,7 @@ GET_LIMIT = 10      # 10位まで取得
 LP_LIMIT = 5        # 詳細分析・画像保存は5位まで
 SAVE_DIR = "lp_stock"
 REVIEW_DIR = "review_report"
-PAGE_PASSWORD = "1234" 
+# PAGE_PASSWORD = "1234"  <-- 廃止！
 KEEP_DAYS = 60
 
 # キーワードリスト
@@ -64,16 +64,13 @@ async def run_fixed():
             args=['--disable-blink-features=AutomationControlled'] 
         )
         
-        # PC用とスマホ用の設定を定義
         pc_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         mobile_user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         
         for cat_name, cat_url in TARGET_CATEGORIES.items():
             log(f"\n🔍 【{cat_name}】 のランキングを取得中...")
             
-            # ---------------------------------------------------------
-            # フェーズ1: PCのフリをしてランキング一覧を取得 (エラー回避のため)
-            # ---------------------------------------------------------
+            # フェーズ1: PCのフリをしてランキング一覧を取得
             context_pc = await browser.new_context(
                 viewport={'width': 1280, 'height': 800}, 
                 user_agent=pc_user_agent
@@ -113,17 +110,15 @@ async def run_fixed():
             except Exception as e:
                 log(f"   ランキング取得エラー: {e}")
             finally:
-                await context_pc.close() # PCモード終了
+                await context_pc.close()
 
             log(f"   -> {len(target_items)}個の商品をリストアップ。スマホモードで分析開始...")
 
-            # ---------------------------------------------------------
-            # フェーズ2: iPhoneのフリをして商品ページへ突撃 (完全スマホLP再現)
-            # ---------------------------------------------------------
+            # フェーズ2: iPhoneのフリをして商品ページへ突撃
             context_mobile = await browser.new_context(
                 viewport={'width': 390, 'height': 8000}, 
                 user_agent=mobile_user_agent,
-                is_mobile=True, # これ重要！モバイルであることを宣言
+                is_mobile=True,
                 has_touch=True
             )
             page_mobile = await context_mobile.new_page()
@@ -151,11 +146,10 @@ async def run_fixed():
                     if is_full_analysis:
                         # 広告撃退
                         try:
-                            # モバイル特有のバナーも考慮
                             close_selectors = [
                                 "button[class*='close']", "div[class*='close']", ".rbs-overlay-close", 
                                 "[aria-label='Close']", "[aria-label='閉じる']", 
-                                "#SC_DefaultClose", ".rt-edge-close" # モバイル用追加
+                                "#SC_DefaultClose", ".rt-edge-close"
                             ]
                             for sel in close_selectors:
                                 if await page_mobile.locator(sel).count() > 0:
@@ -178,13 +172,11 @@ async def run_fixed():
                         img_filename = f"{today_str}_{safe_cat_name}_rank{rank}.jpg"
                         img_path = os.path.join(SAVE_DIR, img_filename)
                         
-                        # フルページ撮影
                         await page_mobile.screenshot(path=img_path, type="jpeg", quality=50, full_page=True)
 
                         content_text = await page_mobile.content()
                         page_height = await page_mobile.evaluate("document.body.scrollHeight")
                         
-                        # キャッチコピー取得（モバイル対応）
                         try:
                             catch_loc = page_mobile.locator(".catch_copy, .item_catch_copy, [class*='catch']").first
                             if await catch_loc.count() > 0:
@@ -192,7 +184,6 @@ async def run_fixed():
                                 catch_copy = txt.strip()[:60] + "..."
                         except: pass
 
-                        # SNS判定
                         sns_score = 0
                         found_keywords = []
                         for kw in SNS_KEYWORDS:
@@ -200,7 +191,6 @@ async def run_fixed():
                                 sns_score += 1
                                 found_keywords.append(kw)
 
-                        # レビューURL取得（モバイル対応）
                         try:
                             review_link_loc = page_mobile.locator("a[href*='review.rakuten.co.jp']").first
                             if await review_link_loc.count() > 0:
@@ -225,12 +215,11 @@ async def run_fixed():
                         else:
                             review_summary = "なし"
 
-                        # 判定ロジック
                         if sns_score >= 1:
                             prediction = "SNS型"
                             reason = f"KW:{','.join(found_keywords)}"
                             tag_color = "#e1306c"
-                        elif page_height > 20000: # モバイルはPCより縦長になりやすいので基準調整
+                        elif page_height > 20000:
                             prediction = "説得型LP"
                             reason = f"長尺"
                             tag_color = "#bf0000"
@@ -259,7 +248,7 @@ async def run_fixed():
                     log(f"   商品分析エラー: {e}")
                     continue
             
-            await context_mobile.close() # カテゴリごとにコンテキストを閉じる
+            await context_mobile.close()
         
         await browser.close()
 
@@ -268,16 +257,16 @@ async def run_fixed():
         csv_filename = f"rakuten_lp_list_{today_str}.csv"
         df.to_csv(os.path.join(SAVE_DIR, csv_filename), index=False, encoding="utf-8-sig")
 
-        # HTML生成
+        # HTML生成 (noindexタグ追加 & パスワード削除)
         html_content = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="robots" content="noindex, nofollow"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>楽天LP分析レポート ({today_str})</title>
             <style>
-                body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 20px; display: none; color: #333; }}
+                body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }}
                 h1 {{ text-align: center; margin-bottom: 30px; }}
                 .nav-link {{ display:block; text-align:center; margin-bottom:20px; font-weight:bold; color:#003366; }}
                 h2.cat-title {{ 
@@ -346,16 +335,6 @@ async def run_fixed():
                 .modal-img {{ width: 100%; display: block; }}
             </style>
             <script>
-                window.onload = function() {{
-                    var pass = prompt("閲覧パスワードを入力してください:");
-                    if (pass === "{PAGE_PASSWORD}") {{
-                        document.body.style.display = "block";
-                    }} else {{
-                        alert("パスワードが違います。");
-                        document.body.innerHTML = "<h1>⛔ Access Denied</h1>";
-                        document.body.style.display = "block";
-                    }}
-                }};
                 function openModal(imgSrc, title) {{
                     var modal = document.getElementById("imageModal");
                     document.getElementById("modalImg").src = imgSrc;
@@ -396,7 +375,6 @@ async def run_fixed():
             if len(cat_items) > 0:
                 html_content += f'<h2 class="cat-title">{cat}</h2>'
                 
-                # 早見表 (1位〜10位すべて表示)
                 html_content += f"""
                 <div class="thumb-matrix-container">
                     <div class="matrix-title">🖼 {cat} サムネイル早見表 (1位〜{len(cat_items)}位)</div>
@@ -404,7 +382,6 @@ async def run_fixed():
                 """
                 for item in cat_items:
                     thumb_src = item['thumb_url'] if item['thumb_url'] else "https://placehold.co/200x200?text=No+Img"
-                    
                     if item['is_full']:
                         safe_cat_id = "".join(c for c in cat if c.isalnum())
                         href = f"#{safe_cat_id}_{item['rank']}"
@@ -424,11 +401,9 @@ async def run_fixed():
                     """
                 html_content += '</div></div>'
 
-                # 詳細カード (5位以内のみ表示)
                 html_content += '<div class="gallery">'
                 for item in cat_items:
                     if not item['is_full']: continue
-
                     review_btn = ""
                     if item['review_url']:
                         review_btn = f'<a href="{item["review_url"]}" target="_blank" class="review-link">⭐️ レビュー</a>'
@@ -470,7 +445,7 @@ async def run_fixed():
         <html>
         <head>
             <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="robots" content="noindex, nofollow"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>楽天LP分析アーカイブ</title>
             <style>
                 body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f4f4f4; padding: 20px; color: #333; }}
@@ -512,12 +487,13 @@ async def run_fixed():
         log("\n❌ データが取れませんでした")
 
     # --- 総合トップページ (index.html) ---
+    # ここにもnoindexを入れる
     top_html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex, nofollow"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>楽天分析ツール ポータル</title>
         <style>
             body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 40px; color: #333; display: flex; justify-content: center; align-items: center; min-height: 80vh; }}
