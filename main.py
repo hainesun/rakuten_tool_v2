@@ -8,7 +8,7 @@ import re
 import random
 import sys
 
-# --- 🛠 設定エリア (デイリー版) 🛠 ---
+# --- 🛠 設定エリア 🛠 ---
 TARGET_CATEGORIES = {
     "👛 レディース財布(デイリー)": "https://ranking.rakuten.co.jp/daily/502368/",
     "💼 メンズ財布(デイリー)": "https://ranking.rakuten.co.jp/daily/552710/",
@@ -18,10 +18,9 @@ TARGET_CATEGORIES = {
 }
 
 GET_LIMIT = 10      # 10位まで取得
-LP_LIMIT = 5        # 詳細分析・画像保存は5位まで
+LP_LIMIT = 5        # LP詳細・レビュー取得は5位まで
 SAVE_DIR = "lp_stock"
 REVIEW_DIR = "review_report"
-# PAGE_PASSWORD = "1234"  <-- 廃止！
 KEEP_DAYS = 60
 
 # キーワードリスト
@@ -37,9 +36,92 @@ SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフル�
 def log(text):
     print(text, flush=True)
 
+# ★追加機能: レビューレポート作成
+def create_review_report(all_data, date_str):
+    if not os.path.exists(REVIEW_DIR):
+        os.makedirs(REVIEW_DIR)
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>レビュー深掘り分析 ({date_str})</title>
+        <style>
+            body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f4f7f6; padding: 20px; color: #333; }}
+            h1 {{ text-align: center; color: #003366; }}
+            .nav-link {{ display:block; text-align:center; margin-bottom:20px; font-weight:bold; color:#003366; }}
+            .container {{ max-width: 800px; margin: 0 auto; }}
+            .item-box {{ background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+            .cat-name {{ font-size: 12px; color: #666; background: #eee; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 5px; }}
+            .item-title {{ font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #333; line-height: 1.4; }}
+            .review-tag {{ display: inline-block; background: #eef9ff; color: #0056b3; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; }}
+            .link-btn {{ display: inline-block; margin-top: 10px; text-decoration: none; color: white; background: #ff9900; padding: 8px 20px; border-radius: 4px; font-size: 12px; font-weight: bold; }}
+            .reason-box {{ font-size:12px; color:#555; background:#fafafa; padding:10px; border-radius:4px; margin-top:10px; }}
+        </style>
+    </head>
+    <body>
+        <h1>🧐 レビュー深掘り分析 ({date_str})</h1>
+        <div style="text-align:center; margin-bottom:20px;">
+            <a href="../index.html" class="nav-link">🏠 ホームに戻る</a>
+            <a href="index.html" style="color:#666;">← 過去一覧に戻る</a>
+        </div>
+        <div class="container">
+    """
+    
+    count = 0
+    for item in all_data:
+        if not item.get('is_full'): continue
+        
+        keywords_html = ""
+        if item['review_summary'] and item['review_summary'] != "なし":
+            for k in item['review_summary'].split(" "):
+                keywords_html += f'<span class="review-tag">{k}</span>'
+        else:
+            keywords_html = '<span style="color:#999; font-size:12px;">特徴的なキーワードなし</span>'
+
+        html += f"""
+        <div class="item-box">
+            <div class="cat-name">{item['category']} {item['rank']}位</div>
+            <div class="item-title">{item['title']}</div>
+            <div style="margin:10px 0;">
+                <strong>抽出キーワード:</strong><br>
+                {keywords_html}
+            </div>
+            <div class="reason-box">
+                💡 分析メモ: {item['reason']}
+            </div>
+            {f'<div style="text-align:right;"><a href="{item["review_url"]}" target="_blank" class="link-btn">実際のレビューを見る</a></div>' if item['review_url'] else ''}
+        </div>
+        """
+        count += 1
+    
+    if count == 0:
+        html += "<p style='text-align:center;'>本日、分析対象となるデータが取得できませんでした。</p>"
+
+    html += "</div></body></html>"
+    
+    with open(os.path.join(REVIEW_DIR, f"report_{date_str}.html"), "w", encoding="utf-8") as f:
+        f.write(html)
+    
+    # レビューのインデックスページ更新
+    files = glob.glob(os.path.join(REVIEW_DIR, "report_*.html"))
+    files.sort(reverse=True)
+    index_html = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>レビュー分析アーカイブ</title><style>body{font-family:sans-serif;padding:20px;background:#f4f7f6;} .container{max-width:600px;margin:0 auto;background:white;padding:20px;border-radius:8px;} a{display:block;padding:15px;border-bottom:1px solid #eee;text-decoration:none;color:#333;font-weight:bold;} a:hover{background:#f9f9f9;}</style></head><body><div class="container"><h1 style="text-align:center;color:#003366;">🧐 レビュー分析アーカイブ</h1><div style="text-align:center;margin-bottom:20px;"><a href="../index.html" style="display:inline;border:none;background:#ddd;padding:5px 10px;border-radius:4px;">🏠 ホームに戻る</a></div>"""
+    for p in files:
+        fname = os.path.basename(p)
+        d_str = fname.replace("report_", "").replace(".html", "")
+        index_html += f'<a href="{fname}">📂 {d_str} の分析レポート</a>'
+    index_html += "</div></body></html>"
+    
+    with open(os.path.join(REVIEW_DIR, "index.html"), "w", encoding="utf-8") as f:
+        f.write(index_html)
+
 async def run_fixed():
-    if not os.path.exists(SAVE_DIR):
-        os.makedirs(SAVE_DIR)
+    if not os.path.exists(SAVE_DIR): os.makedirs(SAVE_DIR)
+    if not os.path.exists(REVIEW_DIR): os.makedirs(REVIEW_DIR)
 
     all_data_list = []
     today = datetime.date.today()
@@ -47,453 +129,197 @@ async def run_fixed():
 
     # お掃除
     limit_date = today - datetime.timedelta(days=KEEP_DAYS)
-    files = glob.glob(os.path.join(SAVE_DIR, "*"))
-    for f in files:
-        filename = os.path.basename(f)
-        match = re.search(r"(\d{4}-\d{2}-\d{2})", filename)
-        if match:
-            try:
-                if datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date() < limit_date:
-                    os.remove(f)
-            except: continue
+    for d in [SAVE_DIR, REVIEW_DIR]:
+        for f in glob.glob(os.path.join(d, "*")):
+            match = re.search(r"(\d{4}-\d{2}-\d{2})", os.path.basename(f))
+            if match:
+                try:
+                    if datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date() < limit_date:
+                        os.remove(f)
+                except: continue
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(
-            headless=False,
-            slow_mo=500,    
-            args=['--disable-blink-features=AutomationControlled'] 
+            headless=False, slow_mo=500, args=['--disable-blink-features=AutomationControlled']
         )
         
-        pc_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        mobile_user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
+        pc_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        mobile_ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
         
         for cat_name, cat_url in TARGET_CATEGORIES.items():
-            log(f"\n🔍 【{cat_name}】 のランキングを取得中...")
+            log(f"\n🔍 【{cat_name}】...")
             
-            # フェーズ1: PCのフリをしてランキング一覧を取得
-            context_pc = await browser.new_context(
-                viewport={'width': 1280, 'height': 800}, 
-                user_agent=pc_user_agent
-            )
+            # --- Phase 1: PCモードでリスト取得 ---
+            context_pc = await browser.new_context(viewport={'width': 1280, 'height': 800}, user_agent=pc_ua)
             page_pc = await context_pc.new_page()
-            
             target_items = []
             try:
-                await page_pc.goto(cat_url, timeout=90000, wait_until="domcontentloaded")
+                await page_pc.goto(cat_url, timeout=60000, wait_until="domcontentloaded")
                 await page_pc.evaluate("window.scrollBy(0, 1000)")
                 await page_pc.wait_for_timeout(2000)
-
-                all_links = await page_pc.locator("div.rnkRanking_image a[href*='item.rakuten.co.jp'], div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
-                thumb_imgs = await page_pc.locator("div.rnkRanking_image img, div.rnkRanking_after img").all()
-
-                seen_items = set()
-                for i, link in enumerate(all_links):
+                
+                links = await page_pc.locator("div.rnkRanking_image a[href*='item.rakuten.co.jp'], div.rnkRanking_after a[href*='item.rakuten.co.jp']").all()
+                imgs = await page_pc.locator("div.rnkRanking_image img, div.rnkRanking_after img").all()
+                
+                seen = set()
+                for i, link in enumerate(links):
                     if len(target_items) >= GET_LIMIT: break
                     try:
-                        url = await link.get_attribute("href")
-                        if url and "item.rakuten.co.jp" in url:
-                            clean_url = url.split('?')[0]
-                            if clean_url not in seen_items:
-                                seen_items.add(clean_url)
-                                thumb_src = ""
-                                if i < len(thumb_imgs):
-                                    thumb_src = await thumb_imgs[i].get_attribute("src")
-                                    if not thumb_src:
-                                        thumb_src = await thumb_imgs[i].get_attribute("data-src")
-                                    if thumb_src and "?_ex=" in thumb_src:
-                                         thumb_src = thumb_src.split("?_ex=")[0] + "?_ex=200x200"
-                                target_items.append({"url": clean_url, "thumb": thumb_src})
+                        u = await link.get_attribute("href")
+                        if u and "item.rakuten.co.jp" in u:
+                            clean = u.split('?')[0]
+                            if clean not in seen:
+                                seen.add(clean)
+                                t_src = ""
+                                if i < len(imgs):
+                                    t_src = await imgs[i].get_attribute("src") or await imgs[i].get_attribute("data-src")
+                                    if t_src and "?_ex=" in t_src: t_src = t_src.split("?_ex=")[0] + "?_ex=200x200"
+                                target_items.append({"url": clean, "thumb": t_src})
                     except: continue
-                
-                if len(target_items) == 0:
-                    log("   ⚠️ 商品が見つかりませんでした。")
+                if not target_items:
+                    log("   ⚠️ 商品が見つかりませんでした (PCモード)")
             except Exception as e:
-                log(f"   ランキング取得エラー: {e}")
+                log(f"   取得失敗: {e}")
             finally:
                 await context_pc.close()
 
-            log(f"   -> {len(target_items)}個の商品をリストアップ。スマホモードで分析開始...")
-
-            # フェーズ2: iPhoneのフリをして商品ページへ突撃
-            context_mobile = await browser.new_context(
-                viewport={'width': 390, 'height': 8000}, 
-                user_agent=mobile_user_agent,
-                is_mobile=True,
-                has_touch=True
-            )
-            page_mobile = await context_mobile.new_page()
+            # --- Phase 2: スマホモードで詳細取得 ---
+            context_mo = await browser.new_context(viewport={'width': 390, 'height': 8000}, user_agent=mobile_ua, is_mobile=True, has_touch=True)
+            page_mo = await context_mo.new_page()
+            
+            log(f"   -> {len(target_items)}個の商品を確保。詳細分析開始...")
 
             for i, item in enumerate(target_items):
-                url = item["url"]
-                thumb_url = item["thumb"]
                 rank = i + 1
-                is_full_analysis = rank <= LP_LIMIT
+                is_full = rank <= LP_LIMIT
+                
+                res = {
+                    "category": cat_name, "rank": rank, "url": item['url'], "thumb_url": item['thumb'],
+                    "is_full": is_full, "title": "", "catch_copy": "", "review_url": "", 
+                    "review_summary": "なし", "type": "－", "reason": "", "img": "", "color": "#ccc"
+                }
 
                 try:
-                    log(f"   [{rank}/{GET_LIMIT}] スマホでアクセス中...")
-                    await page_mobile.goto(url, timeout=90000, wait_until="domcontentloaded")
-                    
-                    title = await page_mobile.title()
-                    
-                    img_filename = ""
-                    catch_copy = ""
-                    review_summary = ""
-                    review_url = ""
-                    prediction = "－"
-                    reason = ""
-                    tag_color = "#ccc"
+                    log(f"   [{rank}/{GET_LIMIT}] アクセス中...")
+                    await page_mo.goto(item['url'], timeout=60000, wait_until="domcontentloaded")
+                    res['title'] = await page_mo.title()
 
-                    if is_full_analysis:
-                        # 広告撃退
+                    if is_full:
+                        # 広告消し
                         try:
-                            close_selectors = [
-                                "button[class*='close']", "div[class*='close']", ".rbs-overlay-close", 
-                                "[aria-label='Close']", "[aria-label='閉じる']", 
-                                "#SC_DefaultClose", ".rt-edge-close"
-                            ]
-                            for sel in close_selectors:
-                                if await page_mobile.locator(sel).count() > 0:
-                                    for btn in await page_mobile.locator(sel).all():
+                            for sel in ["button[class*='close']", "div[class*='close']", ".rbs-overlay-close", "[aria-label='Close']", "#SC_DefaultClose"]:
+                                if await page_mo.locator(sel).count() > 0:
+                                    btns = await page_mo.locator(sel).all()
+                                    for btn in btns:
                                         if await btn.is_visible():
                                             await btn.click()
-                                            await page_mobile.wait_for_timeout(500)
+                                            await page_mo.wait_for_timeout(500)
                         except: pass
 
-                        # スクロール
-                        await page_mobile.evaluate("window.scrollTo(0, 0)")
-                        for _ in range(3):
-                            await page_mobile.evaluate("window.scrollBy(0, 2000)")
-                            await page_mobile.wait_for_timeout(500)
-                        await page_mobile.evaluate("window.scrollTo(0, 0)")
-                        try: await page_mobile.wait_for_load_state("networkidle", timeout=3000)
-                        except: await page_mobile.wait_for_timeout(2000)
+                        # スクショ
+                        safe_cat = "".join(c for c in cat_name if c.isalnum())
+                        img_name = f"{today_str}_{safe_cat}_rank{rank}.jpg"
+                        await page_mo.screenshot(path=os.path.join(SAVE_DIR, img_name), type="jpeg", quality=50, full_page=True)
+                        res['img'] = img_name
 
-                        safe_cat_name = "".join(c for c in cat_name if c.isalnum())
-                        img_filename = f"{today_str}_{safe_cat_name}_rank{rank}.jpg"
-                        img_path = os.path.join(SAVE_DIR, img_filename)
+                        # 解析
+                        content = await page_mo.content()
+                        res['type'] = "SNS型" if any(k in content for k in SNS_KEYWORDS) else "シンプル"
+                        res['color'] = "#e1306c" if res['type'] == "SNS型" else "#555"
                         
-                        await page_mobile.screenshot(path=img_path, type="jpeg", quality=50, full_page=True)
-
-                        content_text = await page_mobile.content()
-                        page_height = await page_mobile.evaluate("document.body.scrollHeight")
-                        
+                        # レビュー
                         try:
-                            catch_loc = page_mobile.locator(".catch_copy, .item_catch_copy, [class*='catch']").first
-                            if await catch_loc.count() > 0:
-                                txt = await catch_loc.text_content()
-                                catch_copy = txt.strip()[:60] + "..."
+                            rev_link = page_mo.locator("a[href*='review.rakuten.co.jp']").first
+                            if await rev_link.count() > 0:
+                                res['review_url'] = await rev_link.get_attribute("href")
                         except: pass
 
-                        sns_score = 0
-                        found_keywords = []
-                        for kw in SNS_KEYWORDS:
-                            if kw in content_text:
-                                sns_score += 1
-                                found_keywords.append(kw)
-
-                        try:
-                            review_link_loc = page_mobile.locator("a[href*='review.rakuten.co.jp']").first
-                            if await review_link_loc.count() > 0:
-                                review_url = await review_link_loc.get_attribute("href")
-                        except: pass
-
-                        if review_url:
+                        if res['review_url']:
                             try:
-                                await page_mobile.goto(review_url, timeout=30000, wait_until="domcontentloaded")
-                                review_text_all = await page_mobile.content()
-                                review_keywords_list = []
-                                for k in REVIEW_KEYWORDS:
-                                    if k in review_text_all:
-                                        review_keywords_list.append(k)
-                                if review_keywords_list:
-                                    unique = list(set(review_keywords_list))
-                                    review_summary = " ".join(unique[:5])
-                                else:
-                                    review_summary = "特徴なし"
-                            except:
-                                review_summary = "取得失敗"
-                        else:
-                            review_summary = "なし"
-
-                        if sns_score >= 1:
-                            prediction = "SNS型"
-                            reason = f"KW:{','.join(found_keywords)}"
-                            tag_color = "#e1306c"
-                        elif page_height > 20000:
-                            prediction = "説得型LP"
-                            reason = f"長尺"
-                            tag_color = "#bf0000"
-                        else:
-                            prediction = "シンプル"
-                            reason = f"短尺"
-                            tag_color = "#555"
-                    
-                    all_data_list.append({
-                        "category": cat_name,
-                        "rank": rank,
-                        "title": title,
-                        "catch_copy": catch_copy,
-                        "review_url": review_url,
-                        "review_summary": review_summary,
-                        "type": prediction,
-                        "reason": reason,
-                        "url": url,
-                        "img": img_filename,
-                        "thumb_url": thumb_url,
-                        "color": tag_color,
-                        "is_full": is_full_analysis
-                    })
-
-                except Exception as e:
-                    log(f"   商品分析エラー: {e}")
-                    continue
+                                await page_mo.goto(res['review_url'], timeout=30000)
+                                r_txt = await page_mo.content()
+                                f_kws = list(set([k for k in REVIEW_KEYWORDS if k in r_txt]))
+                                res['review_summary'] = " ".join(f_kws[:5]) if f_kws else "特徴なし"
+                                res['reason'] = f"KW: {','.join(f_kws[:5])}"
+                            except: pass
+                except: pass
+                
+                all_data_list.append(res)
             
-            await context_mobile.close()
+            await context_mo.close()
         
         await browser.close()
 
-    if len(all_data_list) > 0:
+    if all_data_list:
+        # CSV保存
         df = pd.DataFrame(all_data_list)
-        csv_filename = f"rakuten_lp_list_{today_str}.csv"
-        df.to_csv(os.path.join(SAVE_DIR, csv_filename), index=False, encoding="utf-8-sig")
-
-        # HTML生成 (noindexタグ追加 & パスワード削除)
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="robots" content="noindex, nofollow"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>楽天LP分析レポート ({today_str})</title>
-            <style>
-                body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }}
-                h1 {{ text-align: center; margin-bottom: 30px; }}
-                .nav-link {{ display:block; text-align:center; margin-bottom:20px; font-weight:bold; color:#003366; }}
-                h2.cat-title {{ 
-                    margin-top: 50px; margin-bottom: 20px; padding-left: 15px; 
-                    border-left: 5px solid #bf0000; font-size: 24px; background: #fff;
-                    padding: 10px 15px; border-radius: 0 5px 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                }}
-                .thumb-matrix-container {{
-                    background: white; padding: 20px; border-radius: 10px; margin-bottom: 40px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-                }}
-                .matrix-title {{ font-size:16px; font-weight:bold; margin-bottom:15px; color:#555; border-bottom:1px solid #eee; padding-bottom:5px; }}
-                .thumb-matrix {{ 
-                    display: grid; 
-                    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
-                    gap: 15px; 
-                }}
-                .matrix-item {{ 
-                    display: flex; flex-direction: column; align-items: center; 
-                    text-decoration: none; color: #333; transition: transform 0.2s; position: relative;
-                }}
-                .matrix-item:hover {{ transform: scale(1.05); }}
-                .matrix-img {{ 
-                    width: 100px; height: 100px; object-fit: cover; 
-                    border-radius: 8px; border: 1px solid #ddd; 
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                    background-color: #eee;
-                }}
-                .matrix-rank {{ 
-                    margin-top: 5px; font-size: 14px; font-weight: bold; 
-                    background: #bf0000; color: white; padding: 2px 8px; border-radius: 10px; 
-                }}
-                .matrix-ext {{ position: absolute; top: 0; right: 0; background: #333; color: white; font-size: 10px; padding: 2px 4px; border-radius: 0 8px 0 4px; opacity: 0.8; }}
-
-                .gallery {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; }}
-                .card {{ background: white; width: 320px; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.2s; display: flex; flex-direction: column; scroll-margin-top: 20px; }}
-                .card:hover {{ transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }}
-                .tag {{ display: inline-block; padding: 4px 12px; border-radius: 20px; color: white; font-size: 11px; font-weight: bold; margin-bottom: 10px; align-self: flex-start; }}
-                .rank-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }}
-                .rank-num {{ font-size: 16px; font-weight: bold; color: #333; }}
-                .thumb-wrapper {{ cursor: zoom-in; overflow: hidden; border-radius: 6px; border: 1px solid #eee; height: 350px; position: relative; }}
-                .thumb {{ width: 100%; height: 100%; object-fit: cover; object-position: top; transition: opacity 0.3s; }}
-                .thumb:hover {{ opacity: 0.8; }}
-                .catch-copy {{ font-size: 12px; color: #bf0000; font-weight: bold; margin: 10px 0 5px; line-height: 1.4; min-height: 34px; }}
-                .title {{ font-size: 13px; margin-bottom: 10px; height: 38px; overflow: hidden; line-height: 1.4; font-weight: bold; }}
-                .review-box {{ font-size: 11px; background: #eef9ff; color: #0056b3; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-weight:bold; }}
-                .btn-area {{ margin-top: auto; display: flex; gap: 5px; }}
-                a.link {{ flex: 1; text-align: center; background: #333; color: white; text-decoration: none; font-size: 11px; padding: 10px 0; border-radius: 6px; font-weight: bold; transition: opacity 0.2s; }}
-                a.review-link {{ flex: 1; text-align: center; background: #ff9900; color: white; text-decoration: none; font-size: 11px; padding: 10px 0; border-radius: 6px; font-weight: bold; transition: opacity 0.2s; }}
-                a:hover {{ opacity: 0.8; }}
-                
-                .modal {{ display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }}
-                .modal-content-wrapper {{ 
-                    position: relative; 
-                    margin: 30px auto; 
-                    width: 90%; 
-                    max-width: 450px; 
-                    height: 90vh; 
-                    background: white; 
-                    border-radius: 12px; 
-                    overflow-y: auto; 
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                }}
-                .modal-header {{ background: #fff; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }}
-                .close-btn {{ color: #333; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; background: #f0f0f0; width: 40px; height: 40px; border-radius: 50%; text-align: center; display: flex; align-items: center; justify-content: center; }}
-                .modal-img {{ width: 100%; display: block; }}
-            </style>
-            <script>
-                function openModal(imgSrc, title) {{
-                    var modal = document.getElementById("imageModal");
-                    document.getElementById("modalImg").src = imgSrc;
-                    document.getElementById("modalTitle").innerText = title;
-                    modal.style.display = "block";
-                    document.body.style.overflow = "hidden";
-                }}
-                function closeModal() {{
-                    document.getElementById("imageModal").style.display = "none";
-                    document.body.style.overflow = "auto";
-                }}
-                window.onclick = function(event) {{
-                    if (event.target == document.getElementById("imageModal")) {{ closeModal(); }}
-                }}
-            </script>
-        </head>
-        <body>
-            <h1>📅 分析レポート ({today_str})</h1>
-            <div style="text-align:center; margin-bottom:20px;">
-                <a href="../index.html" class="nav-link">🏠 ホームに戻る</a>
-                <a href="index.html" style="color:#666; text-decoration:underline;">← 過去の日付一覧に戻る</a>
-            </div>
-
-            <div id="imageModal" class="modal">
-                <div class="modal-content-wrapper">
-                    <div class="modal-header">
-                        <div id="modalTitle" style="font-size:14px; font-weight:bold; width:85%;"></div>
-                        <span class="close-btn" onclick="closeModal()">&times;</span>
-                    </div>
-                    <img class="modal-img" id="modalImg">
-                </div>
-            </div>
-        """
-
-        unique_categories = list(TARGET_CATEGORIES.keys())
-        for cat in unique_categories:
-            cat_items = [d for d in all_data_list if d['category'] == cat]
-            if len(cat_items) > 0:
-                html_content += f'<h2 class="cat-title">{cat}</h2>'
-                
-                html_content += f"""
-                <div class="thumb-matrix-container">
-                    <div class="matrix-title">🖼 {cat} サムネイル早見表 (1位〜{len(cat_items)}位)</div>
-                    <div class="thumb-matrix">
-                """
-                for item in cat_items:
-                    thumb_src = item['thumb_url'] if item['thumb_url'] else "https://placehold.co/200x200?text=No+Img"
-                    if item['is_full']:
-                        safe_cat_id = "".join(c for c in cat if c.isalnum())
-                        href = f"#{safe_cat_id}_{item['rank']}"
-                        target = ""
-                        ext_label = ""
-                    else:
-                        href = item['url']
-                        target = 'target="_blank"'
-                        ext_label = '<span class="matrix-ext">楽天↗</span>'
-
-                    html_content += f"""
-                    <a href="{href}" class="matrix-item" {target}>
-                        <img src="{thumb_src}" class="matrix-img">
-                        <span class="matrix-rank">{item['rank']}位</span>
-                        {ext_label}
-                    </a>
-                    """
-                html_content += '</div></div>'
-
-                html_content += '<div class="gallery">'
-                for item in cat_items:
-                    if not item['is_full']: continue
-                    review_btn = ""
-                    if item['review_url']:
-                        review_btn = f'<a href="{item["review_url"]}" target="_blank" class="review-link">⭐️ レビュー</a>'
-                    else:
-                        review_btn = '<span style="flex:1; text-align:center; font-size:11px; padding:10px 0; color:#ccc;">(レビューなし)</span>'
-                    safe_cat_id = "".join(c for c in cat if c.isalnum())
-                    item_id = f"{safe_cat_id}_{item['rank']}"
-                    html_content += f"""
-                        <div class="card" id="{item_id}">
-                            <span class="tag" style="background: {item['color']}">{item['type']}</span>
-                            <div class="rank-header">
-                                <span class="rank-num">{item['rank']}位</span>
-                            </div>
-                            <div class="thumb-wrapper" onclick="openModal('{item['img']}', '{item['title']}')">
-                                <img src="{item['img']}" class="thumb" loading="lazy">
-                            </div>
-                            <div class="catch-copy">{item['catch_copy']}</div>
-                            <div class="title">{item['title'][:35]}...</div>
-                            <div class="review-box">💬 口コミ: {item['review_summary']}</div>
-                            <div class="btn-area">
-                                <a href="{item['url']}" target="_blank" class="link">商品ページ</a>
-                                {review_btn}
-                            </div>
-                        </div>
-                    """
-                html_content += '</div>'
-        html_content += "</body></html>"
-
-        report_filename = f"report_{today_str}.html"
-        with open(os.path.join(SAVE_DIR, report_filename), "w", encoding="utf-8") as f:
-            f.write(html_content)
-        log(f"\n✨ レポート作成完了: {report_filename}")
-
-        report_files = glob.glob(os.path.join(SAVE_DIR, "report_*.html"))
-        report_files.sort(reverse=True)
+        df.to_csv(os.path.join(SAVE_DIR, f"rakuten_lp_list_{today_str}.csv"), index=False, encoding="utf-8-sig")
         
-        index_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="robots" content="noindex, nofollow"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>楽天LP分析アーカイブ</title>
-            <style>
-                body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f4f4f4; padding: 20px; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }}
-                h1 {{ text-align: center; color: #bf0000; }}
-                ul {{ list-style: none; padding: 0; }}
-                li {{ margin-bottom: 15px; }}
-                a.report-link {{ display: block; padding: 15px; background: #f8f9fa; border-left: 5px solid #bf0000; text-decoration: none; color: #333; font-weight: bold; transition: 0.2s; border-radius: 4px; }}
-                a.report-link:hover {{ background: #bf0000; color: white; }}
-                .date {{ font-size: 14px; color: #666; font-weight: normal; margin-left: 10px; }}
-                .home-btn {{ display:block; text-align:center; margin-bottom:20px; font-weight:bold; color:#003366; text-decoration:none; padding:10px; background:#e0e0e0; border-radius:5px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <a href="../index.html" class="home-btn">🏠 総合トップページに戻る</a>
-                <h1>📚 デイリーランキング<br>画像レポート一覧</h1>
-                <p style="text-align:center; margin-bottom:30px;">過去{KEEP_DAYS}日分のデータを保存中</p>
-                <ul>
+        # ★レビューレポート生成を実行
+        create_review_report(all_data_list, today_str)
+        log(f"✨ レビュー分析レポート作成完了: {today_str}")
+
+        # LP HTML生成
+        html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>楽天LP分析 ({today_str})</title>
+        <style>
+            body{{font-family:sans-serif;background:#f0f2f5;padding:20px;color:#333;}} h1{{text-align:center;}} .nav-link{{display:block;text-align:center;margin-bottom:20px;font-weight:bold;color:#003366;}}
+            .thumb-matrix{{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;background:white;padding:15px;border-radius:10px;margin-bottom:30px;}}
+            .matrix-item{{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:#333;font-size:12px;position:relative;}}
+            .matrix-img{{width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid #ddd;}}
+            .matrix-ext{{position:absolute;top:0;right:0;background:#333;color:white;font-size:9px;padding:2px 4px;opacity:0.8;}}
+            .gallery{{display:flex;flex-wrap:wrap;gap:20px;}}
+            .card{{background:white;width:320px;padding:15px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1);}}
+            .thumb-wrapper{{height:350px;overflow:hidden;border:1px solid #eee;cursor:pointer;}} .thumb{{width:100%;transition:opacity 0.3s;}} .thumb:hover{{opacity:0.8;}}
+            .modal{{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:999;backdrop-filter:blur(5px);}}
+            .modal-content{{position:relative;margin:30px auto;width:90%;max-width:450px;height:90vh;background:white;overflow-y:auto;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,0.5);}}
+            .close{{position:sticky;top:0;right:0;background:#fff;padding:15px;text-align:right;font-size:24px;cursor:pointer;border-bottom:1px solid #eee;z-index:100;}}
+        </style>
+        <script>
+            function openModal(src){{document.getElementById('mImg').src=src;document.getElementById('modal').style.display='block';document.body.style.overflow='hidden';}}
+            function closeModal(){{document.getElementById('modal').style.display='none';document.body.style.overflow='auto';}}
+        </script></head><body><h1>📅 LP分析 ({today_str})</h1><a href="../index.html" class="nav-link">🏠 ホームに戻る</a>
+        <div id="modal" class="modal" onclick="closeModal()"><div class="modal-content" onclick="event.stopPropagation()"><div class="close" onclick="closeModal()">×</div><img id="mImg" style="width:100%;"></div></div>
         """
-        for filepath in report_files:
-            filename = os.path.basename(filepath)
-            date_str = filename.replace("report_", "").replace(".html", "")
-            index_html += f"""
-                <li>
-                    <a href="{filename}" class="report-link">
-                        📂 {date_str} のレポート
-                        <span class="date">クリックして閲覧</span>
-                    </a>
-                </li>
-            """
-        index_html += "</ul></div></body></html>"
         
-        with open(os.path.join(SAVE_DIR, "index.html"), "w", encoding="utf-8") as f:
-            f.write(index_html)
-        log("✅ アーカイブページ更新完了")
+        for cat in TARGET_CATEGORIES.keys():
+            items = [x for x in all_data_list if x['category'] == cat]
+            if not items: continue
+            html += f"<h2>{cat}</h2><div class='thumb-matrix'>"
+            for it in items:
+                link = f"#{''.join(c for c in cat if c.isalnum())}_{it['rank']}" if it['is_full'] else it['url']
+                target = "" if it['is_full'] else 'target="_blank"'
+                ext = "<span class='matrix-ext'>楽天↗</span>" if not it['is_full'] else ""
+                html += f"<a href='{link}' class='matrix-item' {target}><img src='{it['thumb_url'] or 'https://placehold.co/100'}' class='matrix-img'><span>{it['rank']}位</span>{ext}</a>"
+            html += "</div><div class='gallery'>"
+            for it in items:
+                if not it['is_full']: continue
+                rid = "".join(c for c in cat if c.isalnum()) + f"_{it['rank']}"
+                html += f"""<div class="card" id="{rid}"><div class="rank-header"><strong>{it['rank']}位</strong> <span style="background:{it['color']};color:white;padding:2px 6px;border-radius:4px;font-size:10px;">{it['type']}</span></div>
+                <div class="thumb-wrapper" onclick="openModal('{it['img']}')"><img src="{it['img']}" class="thumb"></div>
+                <div style="font-size:12px;margin:10px 0;"><b>{it['title'][:30]}...</b></div>
+                <div style="background:#f0f8ff;padding:5px;font-size:11px;color:#0056b3;">💬 {it['review_summary']}</div>
+                <div style="display:flex;gap:5px;margin-top:10px;"><a href="{it['url']}" target="_blank" style="flex:1;text-align:center;background:#333;color:white;padding:8px 0;border-radius:4px;text-decoration:none;font-size:11px;">商品へ</a>
+                {f'<a href="{it["review_url"]}" target="_blank" style="flex:1;text-align:center;background:#f90;color:white;padding:8px 0;border-radius:4px;text-decoration:none;font-size:11px;">レビュー</a>' if it['review_url'] else ''}</div></div>"""
+            html += "</div>"
+        html += "</body></html>"
+        
+        with open(os.path.join(SAVE_DIR, f"report_{today_str}.html"), "w", encoding="utf-8") as f: f.write(html)
+        
+        # LPアーカイブ更新
+        idx = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>LPアーカイブ</title><style>body{font-family:sans-serif;padding:20px;background:#f4f7f6;} .container{max-width:600px;margin:0 auto;background:white;padding:20px;border-radius:8px;} a{display:block;padding:10px;border-bottom:1px solid #eee;text-decoration:none;color:#333;} a:hover{background:#f9f9f9;}</style></head><body><div class="container"><h1 style="text-align:center;color:#bf0000;">📚 LPアーカイブ</h1><div style="text-align:center;margin-bottom:20px;"><a href="../index.html" style="display:inline;border:none;background:#ddd;padding:5px 10px;border-radius:4px;">🏠 ホームに戻る</a></div>"""
+        for p in sorted(glob.glob(os.path.join(SAVE_DIR, "report_*.html")), reverse=True):
+            idx += f'<a href="{os.path.basename(p)}">📂 {os.path.basename(p).replace("report_","").replace(".html","")} のレポート</a>'
+        idx += "</div></body></html>"
+        with open(os.path.join(SAVE_DIR, "index.html"), "w", encoding="utf-8") as f: f.write(idx)
 
-    else:
-        log("\n❌ データが取れませんでした")
-
-    # --- 総合トップページ (index.html) ---
-    # ここにもnoindexを入れる
+    # 総合トップページ更新 (index.html)
     top_html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
-        <meta name="robots" content="noindex, nofollow"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>楽天分析ツール ポータル</title>
         <style>
             body {{ font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 40px; color: #333; display: flex; justify-content: center; align-items: center; min-height: 80vh; }}
@@ -507,10 +333,8 @@ async def run_fixed():
                 display: flex; flex-direction: column; align-items: center;
             }}
             .menu-card:hover {{ transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }}
-            
             .card-lp {{ border-left-color: #bf0000; }}
             .card-review {{ border-left-color: #003366; }}
-            
             .icon {{ font-size: 40px; margin-bottom: 10px; }}
             .card-title {{ font-size: 20px; font-weight: bold; margin-bottom: 5px; }}
             .card-desc {{ font-size: 14px; color: #666; }}
@@ -520,30 +344,26 @@ async def run_fixed():
     <body>
         <div class="container">
             <h1>🚀 楽天市場 分析ツール v2</h1>
-            
             <div class="menu-grid">
                 <a href="{SAVE_DIR}/index.html" class="menu-card card-lp">
                     <div class="icon">📊</div>
                     <div class="card-title">デイリーランキング画像</div>
                     <div class="card-desc">毎日のランキング商品LPを画像で保存・一覧化</div>
                 </a>
-
                 <a href="{REVIEW_DIR}/index.html" class="menu-card card-review">
                     <div class="icon">🧐</div>
                     <div class="card-title">レビュー深掘り分析</div>
                     <div class="card-desc">「良い点・悪い点・本音」をAIが抽出して要約</div>
                 </a>
             </div>
-
             <div class="timestamp">最終更新: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
         </div>
     </body>
     </html>
     """
+    with open("index.html", "w", encoding="utf-8") as f: f.write(top_html)
     
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(top_html)
-    log("✅ 総合トップページ生成完了 (index.html)")
+    log("✅ 全工程完了！")
 
 if __name__ == "__main__":
     asyncio.run(run_fixed())
