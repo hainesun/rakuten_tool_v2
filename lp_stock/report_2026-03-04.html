@@ -1,0 +1,478 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="robots" content="noindex, nofollow">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>楽天LP分析 (2026-03-04)</title>
+            <style>
+                body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+                h1 { text-align: center; margin-bottom: 20px; }
+                
+                /* ナビゲーションボタン */
+                .nav-area { text-align: center; margin-bottom: 30px; }
+                .nav-btn { display: inline-block; margin: 5px; padding: 10px 20px; background: #fff; color: #bf0000; text-decoration: none; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; }
+                .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.15); }
+                
+                .thumb-matrix { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; background: white; padding: 15px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+                .matrix-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #333; font-size: 12px; position: relative; transition: transform 0.2s; }
+                .matrix-item:hover { transform: scale(1.05); }
+                .matrix-img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+                .matrix-ext { position: absolute; top: 0; right: 0; background: #333; color: white; font-size: 9px; padding: 2px 4px; opacity: 0.8; border-radius: 0 8px 0 4px; }
+                
+                .gallery { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; }
+                .card { background: white; width: 320px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+                .rank-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+                .thumb-wrapper { height: 350px; overflow: hidden; border: 1px solid #eee; cursor: zoom-in; border-radius: 6px; }
+                .thumb { width: 100%; transition: opacity 0.3s; }
+                .thumb:hover { opacity: 0.8; }
+                
+                .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; backdrop-filter: blur(5px); }
+                .modal-content { position: relative; margin: 30px auto; width: 90%; max-width: 450px; height: 90vh; background: white; overflow-y: auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+                .close { position: sticky; top: 0; right: 0; background: #fff; padding: 15px; text-align: right; font-size: 24px; cursor: pointer; border-bottom: 1px solid #eee; z-index: 100; }
+            </style>
+            <script>
+                function openModal(src){document.getElementById('mImg').src=src;document.getElementById('modal').style.display='block';document.body.style.overflow='hidden';}
+                function closeModal(){document.getElementById('modal').style.display='none';document.body.style.overflow='auto';}
+            </script>
+        </head>
+        <body>
+            <h1>📅 LP分析 (2026-03-04)</h1>
+            <div class="nav-area">
+                <a href="../index.html" class="nav-btn">🏠 ホームに戻る</a>
+                <a href="index.html" class="nav-btn">📂 過去の日付一覧に戻る</a>
+            </div>
+            
+            <div id="modal" class="modal" onclick="closeModal()">
+                <div class="modal-content" onclick="event.stopPropagation()">
+                    <div class="close" onclick="closeModal()">×</div>
+                    <img id="mImg" style="width:100%;">
+                </div>
+            </div>
+        <h2>👛 レディース財布(デイリー)</h2><div class='thumb-matrix'><a href='#レディース財布デイリー_1' class='matrix-item' ><img src='https://tshop.r10s.jp/kabankoubouaskal/cabinet/randoseru/9007wt/imgrc0115888266.jpg?fitin=128:128' class='matrix-img'><span>1位</span></a><a href='#レディース財布デイリー_2' class='matrix-item' ><img src='https://tshop.r10s.jp/allrightleather/cabinet/kihon4/waa74121.jpg?fitin=128:128' class='matrix-img'><span>2位</span></a><a href='#レディース財布デイリー_3' class='matrix-item' ><img src='https://tshop.r10s.jp/style-on-bag/cabinet/th/lz-615.jpg?fitin=128:128' class='matrix-img'><span>3位</span></a><a href='#レディース財布デイリー_4' class='matrix-item' ><img src='https://tshop.r10s.jp/morevalue/cabinet/rt19/rt19b_01_02r.jpg?fitin=128:128' class='matrix-img'><span>4位</span></a><a href='#レディース財布デイリー_5' class='matrix-item' ><img src='https://tshop.r10s.jp/to-ail/cabinet/lwt/zip-to005-1b.jpg?fitin=128:128' class='matrix-img'><span>5位</span></a><a href='https://item.rakuten.co.jp/to-ail/zip-to010/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/to-ail/cabinet/lwt/zip-to010-1.jpg?fitin=128:128' class='matrix-img'><span>6位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/eunicedress/kc-12/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/eunicedress/cabinet/item7/kc-12-re1.jpg?fitin=128:128' class='matrix-img'><span>7位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/morevalue/st5/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/morevalue/cabinet/11008152/st5_01_04i.jpg?fitin=128:128' class='matrix-img'><span>8位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/wide/61298/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/wide/cabinet/guide/75564-800-r1.jpg?fitin=128:128' class='matrix-img'><span>9位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/allrightleather/waa7414/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/allrightleather/cabinet/kihon4/waa74141.jpg?fitin=128:128' class='matrix-img'><span>10位</span><span class='matrix-ext'>楽天↗</span></a></div><div class='gallery'>
+                <div class="card" id="レディース財布デイリー_1">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">1位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_レディース財布デイリー_rank1.jpg')">
+                        <img src="2026-03-04_レディース財布デイリー_rank1.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】50店舗の百貨店に選ばれる実績と品質！ メディア掲載多数！協会加盟の...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 丁寧 便利 小さい リピ プレゼント
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/kabankoubouaskal/r9007rfset/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/272257_10000188/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="レディース財布デイリー_2">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">2位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_レディース財布デイリー_rank2.jpg')">
+                        <img src="2026-03-04_レディース財布デイリー_rank2.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】【クーポン利用2,988円】 長財布 レディース 薄い 本革 小さい...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 小さい お得 プレゼント 大きい 雑
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/allrightleather/waa7412/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/349212_10002669/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="レディース財布デイリー_3">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">3位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_レディース財布デイリー_rank3.jpg')">
+                        <img src="2026-03-04_レディース財布デイリー_rank3.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】【クーポンで20%OFF】＼累計8万個突破／財布 レディース 本革 ...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 小さい プレゼント 大きい 雑 かわいい
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/style-on-bag/lz-615/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/304143_10002501/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="レディース財布デイリー_4">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">4位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_レディース財布デイリー_rank4.jpg')">
+                        <img src="2026-03-04_レディース財布デイリー_rank4.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】＼3/5限定特別クーポン★40%OFF／＼累計5万個突破／【ラシエム...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 小さい プレゼント 大きい 雑 かわいい
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/morevalue/t19/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/366493_10000243/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="レディース財布デイリー_5">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">5位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_レディース財布デイリー_rank5.jpg')">
+                        <img src="2026-03-04_レディース財布デイリー_rank5.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】【本日5の付く日24h限定！全品20%OFF目玉クーポンあり】栃木レ...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 小さい お得 プレゼント 肌触り 大きい
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/to-ail/zip-to005/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/370028_10000023/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div></div><h2>💼 メンズ財布(デイリー)</h2><div class='thumb-matrix'><a href='#メンズ財布デイリー_1' class='matrix-item' ><img src='https://tshop.r10s.jp/asamu/cabinet/mainimg/12542640/qb-lmll-nor-9.jpg?fitin=128:128' class='matrix-img'><span>1位</span></a><a href='#メンズ財布デイリー_2' class='matrix-item' ><img src='https://tshop.r10s.jp/wide02/cabinet/guide2/61860--ar.jpg?fitin=128:128' class='matrix-img'><span>2位</span></a><a href='#メンズ財布デイリー_3' class='matrix-item' ><img src='https://tshop.r10s.jp/glencheck/cabinet/shohin27/1080tham_2507.jpg?fitin=128:128' class='matrix-img'><span>3位</span></a><a href='#メンズ財布デイリー_4' class='matrix-item' ><img src='https://tshop.r10s.jp/stylife/cabinet/item/350/nj9350-01_1.jpg?fitin=128:128' class='matrix-img'><span>4位</span></a><a href='#メンズ財布デイリー_5' class='matrix-item' ><img src='https://tshop.r10s.jp/morevalue/cabinet/nk21/nk21_1_3r.jpg?fitin=128:128' class='matrix-img'><span>5位</span></a><a href='https://item.rakuten.co.jp/stylife/pp5375/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/stylife/cabinet/item/375/pp5375-04_1.jpg?fitin=128:128' class='matrix-img'><span>6位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/morevalue/s17/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/morevalue/cabinet/event/test/imgrc0087692036.jpg?fitin=128:128' class='matrix-img'><span>7位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/sacs-bar/tk1709019/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/sacs-bar/cabinet/tk8/tk1709019.jpg?fitin=128:128' class='matrix-img'><span>8位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/casesr/80000000/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/casesr/cabinet/09872724/imgrc0092508781.jpg?fitin=128:128' class='matrix-img'><span>9位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/hanakujira/wonderfulset/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/hanakujira/cabinet/05899967/imgrc0123247628.jpg?fitin=128:128' class='matrix-img'><span>10位</span><span class='matrix-ext'>楽天↗</span></a></div><div class='gallery'>
+                <div class="card" id="メンズ財布デイリー_1">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">1位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_メンズ財布デイリー_rank1.jpg')">
+                        <img src="2026-03-04_メンズ財布デイリー_rank1.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】【P5＆超特価キャンペーン！★クーポンで4,980円】楽天1位 財布...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 硬い サイズ感 丁寧 お得 使いやすい
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/asamu/qb-lmll/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/404090_10000180/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="メンズ財布デイリー_2">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">2位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_メンズ財布デイリー_rank2.jpg')">
+                        <img src="2026-03-04_メンズ財布デイリー_rank2.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】値下げ中★ 財布 メンズ 二つ折 二つ折り 二つ折り財布 名入れ ブ...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 硬い サイズ感 丁寧 便利 リピ
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/wide02/61860/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/282994_10013946/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="メンズ財布デイリー_3">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">3位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_メンズ財布デイリー_rank3.jpg')">
+                        <img src="2026-03-04_メンズ財布デイリー_rank3.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】【販売累計20万個！】二つ折り財布 メンズ 本革 ブライドルレザー ...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 硬い 丁寧 便利 小さい リピ
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/glencheck/73090/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/110073_10000686/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="メンズ財布デイリー_4">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">4位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_メンズ財布デイリー_rank4.jpg')">
+                        <img src="2026-03-04_メンズ財布デイリー_rank4.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">Paul Smith｜ハイライトステッチ 名刺入れ | Rakuten Fash...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 丁寧 お得 プレゼント 早い 遅い
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/stylife/nj9350/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/279405_14894983/1.1/?l2-id=item_review" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="メンズ財布デイリー_5">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">5位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_メンズ財布デイリー_rank5.jpg')">
+                        <img src="2026-03-04_メンズ財布デイリー_rank5.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】財布 メンズ ミニ財布 二つ折り 2つ折り 小さい財布 コンパクト ...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 小さい プレゼント 大きい 雑 サイズ感
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/morevalue/nk21/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/366493_10000404/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div></div><h2>🛋 インテリア(デイリー)</h2><div class='thumb-matrix'><a href='#インテリアデイリー_1' class='matrix-item' ><img src='https://tshop.r10s.jp/cocochi-factory/cabinet/12329445/12526007/dicf070072_main01.jpg?fitin=128:128' class='matrix-img'><span>1位</span></a><a href='#インテリアデイリー_2' class='matrix-item' ><img src='https://tshop.r10s.jp/orlando/cabinet/notepc/couponthumb/th/plw12-wgth-sst-89.jpg?fitin=128:128' class='matrix-img'><span>2位</span></a><a href='#インテリアデイリー_3' class='matrix-item' ><img src='https://tshop.r10s.jp/e-kurashi/cabinet/rank-img/020/main-s6z70-01.jpg?fitin=128:128' class='matrix-img'><span>3位</span></a><a href='#インテリアデイリー_4' class='matrix-item' ><img src='https://tshop.r10s.jp/e-kurashi/cabinet/rank-img/020/main-s1u57_tg.jpg?fitin=128:128' class='matrix-img'><span>4位</span></a><a href='#インテリアデイリー_5' class='matrix-item' ><img src='https://tshop.r10s.jp/auc-kaei-trading/cabinet/zk-snb02/snb02-2026.jpg?fitin=128:128' class='matrix-img'><span>5位</span></a><a href='https://item.rakuten.co.jp/dondon/md-004-s/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/dondon/cabinet/xlm005_9.jpg?fitin=128:128' class='matrix-img'><span>6位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/luckyspread/10000001/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/luckyspread/cabinet/07240546/10248259/imgrc0078419063.jpg?fitin=128:128' class='matrix-img'><span>7位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/exception5251/f-00003/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/exception5251/cabinet/11219683/11219688/discount80/f-00003.jpg?fitin=128:128' class='matrix-img'><span>8位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/classort/fae007/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/classort/cabinet/image-item/fae007-c.jpg?fitin=128:128' class='matrix-img'><span>9位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/itsube-souken/thcd/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/itsube-souken/cabinet/12231160/12356209/imgrc0137012964.jpg?fitin=128:128' class='matrix-img'><span>10位</span><span class='matrix-ext'>楽天↗</span></a></div><div class='gallery'>
+                <div class="card" id="インテリアデイリー_1">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">1位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_インテリアデイリー_rank1.jpg')">
+                        <img src="2026-03-04_インテリアデイリー_rank1.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】【クーポンで20%OFF】抱かれるように眠るまくら HUG NEGU...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 丁寧 便利 リピ プレゼント 早い
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/cocochi-factory/dicf070072/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/369303_10000166/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="インテリアデイリー_2">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">2位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_インテリアデイリー_rank2.jpg')">
+                        <img src="2026-03-04_インテリアデイリー_rank2.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】＼スーパーセール半額／【楽天1位 理学療法士推奨】枕 低反発枕 スト...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 丁寧 小さい リピ お得 使いやすい
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/orlando/pillow-dxzhen/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/379033_10000103/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="インテリアデイリー_3">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">3位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_インテリアデイリー_rank3.jpg')">
+                        <img src="2026-03-04_インテリアデイリー_rank3.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】中が透けない 壁付き チェスト 専用 ズレない 天板 水に強い 耐荷...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 高見え 丁寧 便利 重い リピ
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/e-kurashi/s1y43/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/205937_10048739/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="インテリアデイリー_4">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">4位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_インテリアデイリー_rank4.jpg')">
+                        <img src="2026-03-04_インテリアデイリー_rank4.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】中が透けない 壁付き チェスト スリム/ワイド 幅34/54 奥行4...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 大きい 雑 かわいい サイズ感 丁寧
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/e-kurashi/s1u57/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/205937_10048736/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="インテリアデイリー_5">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">5位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_インテリアデイリー_rank5.jpg')">
+                        <img src="2026-03-04_インテリアデイリー_rank5.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】【50%オフクーポン】即納 収納ボックス 収納ケース 折りたたみ 収...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 小さい お得 大きい 丁寧 セール
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/auc-kaei-trading/zk-snb02-all/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/281364_10000740/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div></div><h2>🍳 キッチン用品(デイリー)</h2><div class='thumb-matrix'><a href='#キッチン用品デイリー_1' class='matrix-item' ><img src='https://tshop.r10s.jp/500works/cabinet/point3/502300471-0472tmb01.jpg?fitin=128:128' class='matrix-img'><span>1位</span></a><a href='#キッチン用品デイリー_2' class='matrix-item' ><img src='https://tshop.r10s.jp/dispis/cabinet/11006545/imgrc0115065479.jpg?fitin=128:128' class='matrix-img'><span>2位</span></a><a href='#キッチン用品デイリー_3' class='matrix-item' ><img src='https://tshop.r10s.jp/kitchenavi/cabinet/vakuen/vakuen_sl_1_14.jpg?fitin=128:128' class='matrix-img'><span>3位</span></a><a href='#キッチン用品デイリー_4' class='matrix-item' ><img src='https://tshop.r10s.jp/kurashi-zakka/cabinet/thum_blk_wide.jpg?fitin=128:128' class='matrix-img'><span>4位</span></a><a href='#キッチン用品デイリー_5' class='matrix-item' ><img src='https://tshop.r10s.jp/ponsshoponline/cabinet/11282393/11282394/imgrc0115903730.jpg?fitin=128:128' class='matrix-img'><span>5位</span></a><a href='https://item.rakuten.co.jp/kurashi-zakka/srn-502/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/kurashi-zakka/cabinet/jin-501_thum2601.jpg?fitin=128:128' class='matrix-img'><span>6位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/latuna/10000004-1/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/latuna/cabinet/items/07673662/imgrc0172810906.jpg?fitin=128:128' class='matrix-img'><span>7位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/scope/iitteep15/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/scope/cabinet/iittala2/iia14b11_a_im08.jpg?fitin=128:128' class='matrix-img'><span>8位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/miyoshi-ya/mw-02007/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/miyoshi-ya/cabinet/sale/mw-02007_01d.jpg?fitin=128:128' class='matrix-img'><span>9位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/scope/iitteep12/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/scope/cabinet/iittala2/iia14a11_a_im06.jpg?fitin=128:128' class='matrix-img'><span>10位</span><span class='matrix-ext'>楽天↗</span></a></div><div class='gallery'>
+                <div class="card" id="キッチン用品デイリー_1">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">1位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_キッチン用品デイリー_rank1.jpg')">
+                        <img src="2026-03-04_キッチン用品デイリー_rank1.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】『marikaさんコラボ』 ブレッド ケース おしゃれ パン ケース...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 特徴なし
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/500works/50230471-0472/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/wd/2_274440_10007796_0/?l-id=item_SP_WriteItemReview" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="キッチン用品デイリー_2">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">2位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_キッチン用品デイリー_rank2.jpg')">
+                        <img src="2026-03-04_キッチン用品デイリー_rank2.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】＼今だけ限定クーポン配布中！／ボオグル 15点セット フライパンセッ...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 お得 プレゼント かわいい サイズ感 丁寧
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/dispis/10011/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/409834_10000016/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="キッチン用品デイリー_3">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">3位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_キッチン用品デイリー_rank3.jpg')">
+                        <img src="2026-03-04_キッチン用品デイリー_rank3.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】＼最大20%OFFクーポン／【公式】VAKUEN プレミアム真空保存...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 小さい お得 大きい 雑 サイズ感
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/kitchenavi/2498-001010/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/396312_10000408/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="キッチン用品デイリー_4">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">4位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_キッチン用品デイリー_rank4.jpg')">
+                        <img src="2026-03-04_キッチン用品デイリー_rank4.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】＼半額タイムSALE！3/1〜3/10！／ストロー整列！sakura...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 小さい お得 大きい 雑 サイズ感
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/kurashi-zakka/jin-603/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/255876_10002471/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="キッチン用品デイリー_5">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">5位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_キッチン用品デイリー_rank5.jpg')">
+                        <img src="2026-03-04_キッチン用品デイリー_rank5.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】【まとめ買い10％OFFクーポン】電子レンジ 焼き魚 電子レンジ調理...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 サイズ感 丁寧 便利 重い 小さい
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/ponsshoponline/0012440001064/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/430417_10000000/1.1/?l-id=item_SP_SeeItemReview_top" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div></div><h2>💄 美容・コスメ(デイリー)</h2><div class='thumb-matrix'><a href='#美容コスメデイリー_1' class='matrix-item' ><img src='https://tshop.r10s.jp/yunth/cabinet/11294195/11294196/11525162/10000000_260228n.jpg?fitin=128:128' class='matrix-img'><span>1位</span></a><a href='#美容コスメデイリー_2' class='matrix-item' ><img src='https://tshop.r10s.jp/ventuno/cabinet/12311277/imgrc0095653818.jpg?fitin=128:128' class='matrix-img'><span>2位</span></a><a href='#美容コスメデイリー_3' class='matrix-item' ><img src='https://tshop.r10s.jp/asiabnc/cabinet/13013173/imgrc0102375891.jpg?fitin=128:128' class='matrix-img'><span>3位</span></a><a href='#美容コスメデイリー_4' class='matrix-item' ><img src='https://tshop.r10s.jp/suisosum-shop/cabinet/h_/facesheetmask/11150273/facesheet_sa_39.jpg?fitin=128:128' class='matrix-img'><span>4位</span></a><a href='#美容コスメデイリー_5' class='matrix-item' ><img src='https://tshop.r10s.jp/dalba/cabinet/d_dalba_collabo/800-2603ss.jpg?fitin=128:128' class='matrix-img'><span>5位</span></a><a href='https://item.rakuten.co.jp/vtcosmetic-official/vitacap2set/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/vtcosmetic-official/cabinet/vitacap2set/vitacap2set.jpg?fitin=128:128' class='matrix-img'><span>6位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/byurjapan/a100120-1/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/byurjapan/cabinet/basemakeup/foundation/cushionv2/cushion-rakuten.jpg?fitin=128:128' class='matrix-img'><span>7位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/kobe-beauty-labo/sal060/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/kobe-beauty-labo/cabinet/thum/sal060_25.jpg?fitin=128:128' class='matrix-img'><span>8位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/kins/kset249/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/kins/cabinet/item/13001868/13001872/t1.jpg?fitin=128:128' class='matrix-img'><span>9位</span><span class='matrix-ext'>楽天↗</span></a><a href='https://item.rakuten.co.jp/vtcosmetic-official/reedle2set/' class='matrix-item' target="_blank"><img src='https://tshop.r10s.jp/vtcosmetic-official/cabinet/reedle2set/imgrc0111133286.jpg?fitin=128:128' class='matrix-img'><span>10位</span><span class='matrix-ext'>楽天↗</span></a></div><div class='gallery'>
+                <div class="card" id="美容コスメデイリー_1">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">1位</strong>
+                        <span style="background:#e1306c;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">SNS型</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_美容コスメデイリー_rank1.jpg')">
+                        <img src="2026-03-04_美容コスメデイリー_rank1.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】【P30%還元+本日限定セット23:59ﾏﾃﾞ】【公式】Yunth ...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 丁寧 便利 リピ お得 プレゼント
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/yunth/10000000/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/409735_10000000/1.1/?l-id=item_SP_SeeItemReview" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="美容コスメデイリー_2">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">2位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_美容コスメデイリー_rank2.jpg')">
+                        <img src="2026-03-04_美容コスメデイリー_rank2.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】■40%OFFクーポン配布中■【総合1位】UU:ON ユユオン ヘッ...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 硬い ちょうどいい 丁寧 リピ お得
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/ventuno/uuon_hs_01/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/316508_10000605/1.1/?l-id=item_SP_SeeItemReview" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="美容コスメデイリー_3">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">3位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_美容コスメデイリー_rank3.jpg')">
+                        <img src="2026-03-04_美容コスメデイリー_rank3.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】＼41％オフ／★roomコラボ【hichon×ロムアンド公式】ロムア...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 特徴なし
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/asiabnc/makeup_set/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/wd/2_376563_10000382_0/?l-id=item_SP_WriteItemReview" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="美容コスメデイリー_4">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">4位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_美容コスメデイリー_rank4.jpg')">
+                        <img src="2026-03-04_美容コスメデイリー_rank4.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】＼50％OFFクーポン&複数購入でプレゼント特典★3月4日00:00...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 サイズ感 丁寧 便利 リピ お得
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/suisosum-shop/h_and_facemask/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/item/1/352601_10000217/1.1/?l-id=item_SP_SeeItemReview" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div>
+                <div class="card" id="美容コスメデイリー_5">
+                    <div class="rank-header">
+                        <strong style="font-size:18px;">5位</strong>
+                        <span style="background:#555;color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">シンプル</span>
+                    </div>
+                    <div class="thumb-wrapper" onclick="openModal('2026-03-04_美容コスメデイリー_rank5.jpg')">
+                        <img src="2026-03-04_美容コスメデイリー_rank5.jpg" class="thumb">
+                    </div>
+                    <div style="font-size:13px; margin:10px 0; font-weight:bold; line-height:1.4;">【楽天市場】＼36%OFF+先着おまけ／★ ayami × d'Alba ★ R...</div>
+                    <div style="background:#f0f8ff; padding:8px; font-size:11px; color:#0056b3; border-radius:5px; margin-bottom:10px;">
+                        💬 特徴なし
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:auto;">
+                        <a href="https://item.rakuten.co.jp/dalba/dalba_collabo/" target="_blank" style="flex:1; text-align:center; background:#333; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">商品ページ</a>
+                        <a href="https://review.rakuten.co.jp/wd/2_391811_10000517_0/?l-id=item_SP_WriteItemReview" target="_blank" style="flex:1; text-align:center; background:#f90; color:white; padding:10px 0; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">レビュー</a>
+                    </div>
+                </div></div></body></html>
