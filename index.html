@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
     <!DOCTYPE html>
     <html>
@@ -42,7 +43,64 @@
                 </a>
             </div>
             <div class="timestamp">最終更新: 2026-04-02 22:35</div>
+=======
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>楽天分析ツール ポータル</title>
+    <style>
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 40px; color: #333; display: flex; justify-content: center; align-items: center; min-height: 80vh; }
+        .container { text-align: center; max-width: 800px; width: 100%; }
+        h1 { color: #333; margin-bottom: 40px; font-size: 28px; }
+        .section-title { font-size: 20px; font-weight: bold; margin: 30px 0 15px; color: #555; text-align: left; padding-bottom: 10px; border-bottom: 2px solid #ddd; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .menu-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-decoration: none; color: #333; transition: transform 0.2s, box-shadow 0.2s; border-left: 8px solid #ccc; display: flex; flex-direction: column; align-items: center; }
+        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .card-rank-lp { border-left-color: #bf0000; }
+        .card-rank-rev { border-left-color: #003366; }
+        .card-seo-lp { border-left-color: #007bff; }
+        .card-seo-rev { border-left-color: #0056b3; }
+        .icon { font-size: 35px; margin-bottom: 10px; }
+        .card-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .card-desc { font-size: 13px; color: #666; }
+        @media (max-width: 600px) { .menu-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 楽天市場 分析ツール v3 (SEO対応)</h1>
+        
+        <div class="section-title">🏆 デイリーランキング分析</div>
+        <div class="menu-grid">
+            <a href="lp_stock/index.html" class="menu-card card-rank-lp">
+                <div class="icon">📊</div>
+                <div class="card-title">ランキング画像</div>
+                <div class="card-desc">毎日のランキング商品LPを保存</div>
+            </a>
+            <a href="review_report/index.html" class="menu-card card-rank-rev">
+                <div class="icon">🧐</div>
+                <div class="card-title">ランキング レビュー</div>
+                <div class="card-desc">良い点・悪い点をAI抽出</div>
+            </a>
+>>>>>>> 9e153c3 (Final setup: split ranking and SEO perfectly)
         </div>
-    </body>
-    </html>
-    
+
+        <div class="section-title">🔍 SEOキーワード検索分析</div>
+        <div class="menu-grid">
+            <a href="seo_lp_stock/index.html" class="menu-card card-seo-lp">
+                <div class="icon">🔎</div>
+                <div class="card-title">SEO検索 画像</div>
+                <div class="card-desc">検索上位のサムネイル50件・LPを保存</div>
+            </a>
+            <a href="seo_review_report/index.html" class="menu-card card-seo-rev">
+                <div class="icon">💬</div>
+                <div class="card-title">SEO検索 レビュー</div>
+                <div class="card-desc">検索上位商品のレビューを分析</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

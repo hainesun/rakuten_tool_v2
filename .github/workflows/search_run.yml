@@ -1,8 +1,8 @@
-name: デイリーランキングスクレイプ
+name: SEO検索順位スクレイプ
 
 on:
   schedule:
-    - cron: '0 22 * * *'
+    - cron: '0 23 * * *'
   workflow_dispatch:
 
 permissions:
@@ -21,10 +21,10 @@ jobs:
           sudo apt-get install -y xvfb fonts-ipafont fonts-ipaexfont fonts-noto-cjk
           pip install pandas playwright
           playwright install chromium
-      - run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" python main.py
+      - run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" python search_main.py
       - run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "🤖 Auto update (Daily Ranking)" || echo "No changes to commit"
+          git commit -m "🤖 Auto update (SEO Search)" || echo "No changes to commit"
           git push
