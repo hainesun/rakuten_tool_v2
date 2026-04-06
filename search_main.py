@@ -23,12 +23,7 @@ SAVE_DIR = "seo_lp_stock"
 REVIEW_DIR = "seo_review_report" 
 KEEP_DAYS = 60
 
-REVIEW_KEYWORDS = [
-    "早い", "遅い", "丁寧", "雑", "可愛い", "かわいい", "おしゃれ", "シンプル", "高見え", "安っぽい",
-    "使いやすい", "便利", "軽い", "重い", "小さい", "大きい", "リピ", "プレゼント", "満足", "残念", 
-    "おすすめ", "サイズ感", "ちょうどいい", "到着", "リピート", "美味", "不味", "香り", "肌触り", 
-    "柔らかい", "硬い", "コスパ", "お得", "セール", "割引", "値上げ", "値下げ"
-]
+REVIEW_KEYWORDS = ["早い", "遅い", "丁寧", "雑", "可愛い", "かわいい", "おしゃれ", "シンプル", "高見え", "安っぽい", "使いやすい", "便利", "軽い", "重い", "小さい", "大きい", "リピ", "プレゼント", "満足", "残念", "おすすめ", "サイズ感", "ちょうどいい", "到着", "リピート", "美味", "不味", "香り", "肌触り", "柔らかい", "硬い", "コスパ", "お得", "セール", "割引", "値上げ", "値下げ"]
 SNS_KEYWORDS = ["インスタ", "Instagram", "instagram", "SNS", "インフルエンサー", "見て購入", "紹介"]
 
 def log(text): print(text, flush=True)
@@ -90,7 +85,7 @@ async def run_fixed():
                                 const url = link.href.split('?')[0];
                                 const thumb = img.src || img.getAttribute('data-src');
                                 if(!items.find(i => i.url === url) && thumb) {{
-                                    const cleanThumb = thumb.split('?_ex=')[0] + '?_ex=200x200';
+                                    const cleanThumb = thumb.split('?')[0] + '?_ex=200x200';
                                     items.push({{url: url, thumb: cleanThumb}});
                                 }}
                             }}
